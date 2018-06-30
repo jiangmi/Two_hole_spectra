@@ -20,7 +20,7 @@ Norb = 7
 if Norb==3 or Norb==7:
     #tpd_tpp_set = [(1.3, 0.00001),(1.3, 0.00001)]
     tpd = 1.3
-    tpp = 0.00001
+    tpp = 0.6
 elif Norb==9:
     pds = 1.5
     pdp = 0.7
@@ -44,9 +44,9 @@ Lanczos_maxiter = 800
 
 if_project_out_two_holes_on_different_Cu = 0
 if_compute_Aw_dd_total = 0
-if_compute_Aw_pp = 1
-if_compute_Aw_dp = 1
-if_compute_Aw_Cu_O_dx2y2 = 1
+if_compute_Aw_pp = 0
+if_compute_Aw_dp = 0
+if_compute_Aw_Cu_O_dx2y2 = 0
 
 if Norb==3:
     Cu_orbs = ['dx2y2']
@@ -76,7 +76,7 @@ Upp = 0
 if Norb==3:
     Udd = 0 #8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['1A1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
+    symmetries = ['1A1','1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
     print "symmetries = ",symmetries
     A = 6.5
     B = 0.15

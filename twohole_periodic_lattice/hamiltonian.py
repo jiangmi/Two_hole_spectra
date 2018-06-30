@@ -586,17 +586,14 @@ def create_tpp_nn_matrix(phase,VS):
                 x1_new, y1_new = x1 + vx, y1 + vy
 
                 # get the position of reference site(Cu) in the same unit cell 
-                orb, Rx_new, Ry_new = lat.get_unit_cell_rep(x1_new,y1_new)
-                if orb == ['NotOnSublattice']:
+                orbs1_new, Rx_new, Ry_new = lat.get_unit_cell_rep(x1_new,y1_new)
+                if orbs1_new == ['NotOnSublattice'] or orbs1_new == pam.Cu_orbs:
                     continue
 
                 x1_shift = x1_new - Rx_new
                 y1_shift = y1_new - Ry_new
                 x2_shift = x2 - Rx_new
                 y2_shift = y2 - Ry_new
-
-                orbs1_new, _, _ = lat.get_unit_cell_rep(x1_shift,y1_shift)
-                orbs2_new, _, _ = lat.get_unit_cell_rep(x2_shift,y2_shift)
 
                 # consider t_pp for all cases
                 for o1 in orbs1_new:
@@ -632,7 +629,7 @@ def create_tpp_nn_matrix(phase,VS):
                 x2_new, y2_new = x2 + vx, y2 + vy
                 
                 orbs2_new, _, _ = lat.get_unit_cell_rep(x2_new, y2_new)
-                if orbs2_new == ['NotOnSublattice']:
+                if orbs2_new == ['NotOnSublattice'] or orbs2_new == pam.Cu_orbs:
                     continue
                     
                 for o2 in orbs2_new:

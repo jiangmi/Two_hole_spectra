@@ -6,4 +6,4 @@ The variational space is constructed and then the Hamiltonian matrix is generate
 
 Difference of impurity model from the periodic lattice model calculation:
 1. There is no k-dependence 
-2. The impurity model rotates the O lattice by 45 degrees so that Cu locates in the middle of a square lattice. Then tpd is along diagonal direction and tpp is (1,0) or (0,1) etc.
+2. The impurity model keeps the lattice structure the same as CuO2 but now there is only one Cu-site at (0,0)

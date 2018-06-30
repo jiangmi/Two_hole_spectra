@@ -304,8 +304,18 @@ class VariationalSpace:
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
 
-        uid = i1 + 2*i2 + 4*(o1 + N*o2 + \
-              N*N*( (y1+1) + (x1+1)*3 + (y2+s)*9 + (x2+s)*B1*9 ) )
+        uid = i1 + 2*i2 + 4*(o1 + N*o2 + N*N*( (y1+1) + (x1+1)*3 + (y2+s)*9 + (x2+s)*B1*9 ) )
+        
+        # check if uid maps back to the original state, namely uid's uniqueness
+        tstate = self.get_state(uid)
+        ts1 = tstate['hole1_spin']
+        ts2 = tstate['hole2_spin']
+        torb1 = tstate['hole1_orb']
+        torb2 = tstate['hole2_orb']
+        tx1, ty1 = tstate['hole1_coord']
+        tx2, ty2 = tstate['hole2_coord']
+        assert((s1,orb1,x1,y1,s2,orb2,x2,y2)==(ts1,torb1,tx1,ty1,ts2,torb2,tx2,ty2))
+        
         return uid
 
     def get_state(self,uid):

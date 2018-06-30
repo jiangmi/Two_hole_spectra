@@ -70,7 +70,7 @@ def find_singlet_triplet_partner(state,VS):
         
     return VS.get_index(partner_state), phase
 
-def create_singlet_triplet_basis_change_matrix(phase,VS,d_double):
+def create_singlet_triplet_basis_change_matrix(VS,d_double):
     '''
     Create a matrix representing the basis change to singlets/triplets. The
     columns of the output matrix are the new basis vectors. 
@@ -169,8 +169,6 @@ def find_singlet_triplet_partner_d_double(state,VS):
 
     Parameters
     ----------
-    phase: dictionary containing the phase values exp(-kx*Rx*1j/2.0-ky*Ry*1j/2.0).
-        Created with hamiltonian.create_phase_dict.
     VS: VS: VariationalSpace class from the module variational_space
 
     Returns
@@ -186,11 +184,11 @@ def find_singlet_triplet_partner_d_double(state,VS):
     x2, y2 = state['hole2_coord']
 
     partner_state = vs.create_state('up',orb2,x2,y2,'dn',orb1,x1,y1)
-    phase = 1.0
+    phase = -1.0
         
     return VS.get_index(partner_state), phase
 
-def create_singlet_triplet_basis_change_matrix_d_double(phase,VS,d_double):
+def create_singlet_triplet_basis_change_matrix_d_double(VS,d_double):
     '''
     Similar to above create_singlet_triplet_basis_change_matrix but only applies
     basis change for d_double states
@@ -253,7 +251,7 @@ def create_singlet_triplet_basis_change_matrix_d_double(phase,VS,d_double):
                     # convention: original state col i stores singlet and 
                     #             partner state col j stores triplet
                     data.append(1.0);  row.append(i); col.append(i)
-                    data.append(-ph);   row.append(j); col.append(i)
+                    data.append(ph);   row.append(j); col.append(i)
                     S_val[i]  = 0
                     Sz_val[i] = 1
 
@@ -263,7 +261,7 @@ def create_singlet_triplet_basis_change_matrix_d_double(phase,VS,d_double):
 
                     # append matrix elements for triplet states
                     data.append(1.0);  row.append(i); col.append(j)
-                    data.append(ph);   row.append(j); col.append(j)
+                    data.append(-ph);  row.append(j); col.append(j)
                     S_val[j]  = 1
                     Sz_val[j] = 1
 

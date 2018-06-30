@@ -1,8 +1,7 @@
 '''
 Contains a class for the variational space for the cuprate layer
 and functions used to represent states as dictionaries.
-Distance (L1-norm) between any two particles must not exceed a cutoff
-denoted by Mc. 
+Distance (L1-norm) between a hole and Cu-site (0,0) cannot > cutoff Mc
 '''
 
 import parameters as pam
@@ -10,13 +9,13 @@ import lattice as lat
 import bisect
 import numpy as np
 
-def create_state(spin1,orb1,x1,y1,spin2,orb2,x2,y2):
+def create_state(s1,orb1,x1,y1,s2,orb2,x2,y2):
     '''
     Creates a dictionary representing a state
 
     Parameters
     ----------
-    spin1, spin2   : string of spin
+    s1, s2   : string of spin
     orb_up, orb_dn : string of orb
     x_up, y_up: integer coordinates of hole1
                 Must be (1,0), (0,1), (0,0)
@@ -28,17 +27,12 @@ def create_state(spin1,orb1,x1,y1,spin2,orb2,x2,y2):
     variational space because the hole-hole Manhattan distance
     exceeds Mc.
     '''
-    assert not (((x1,y1))==(x2,y2) and spin1==spin2 and orb1==orb2)
-    assert (x1,y1) in [(0,0),(1,0),(0,1)]
-    orb, _, _ = lat.get_unit_cell_rep(x1,y1)
-    assert orb1 in orb
-    orb, _, _ = lat.get_unit_cell_rep(x2,y2)
-    assert orb2 in orb
+    assert not (((x1,y1))==(x2,y2) and s1==s2 and orb1==orb2)
     
-    state = {'hole1_spin' :spin1,\
+    state = {'hole1_spin' :s1,\
              'hole1_orb'  :orb1,\
              'hole1_coord':(x1,y1),\
-             'hole2_spin' :spin2,\
+             'hole2_spin' :s2,\
              'hole2_orb'  :orb2,\
              'hole2_coord':(x2,y2)}
     return state
@@ -51,12 +45,9 @@ def make_state_canonical(state):
     The sign change due to anticommuting creation operators should be 
     taken into account so that phase below has a negative sign
     
-    see Mirko's notes VS_state.pdf for the real meaning of states!
     =============================================================
     Case 1: 
-    when hole2 is on left of hole 1, need to shift hole2's coordinates
-    to origin unit cell so that all states' first hole locates in origin
-    
+    when hole2 is on left of hole 1, switch them such that
     Orders the hole coordinates in such a way that the coordinates 
     of the left creation operator are lexicographically
     smaller than those of the right.
@@ -68,18 +59,17 @@ def make_state_canonical(state):
     = up, dx2-y2, (0,0), up, dxy,    (0,0)
     need sort orbital order
     b) opposite spin state:
-    only keep spin1 up state
+    only keep spin1 = up state
     
-    For phase, see note_on_two_holes_same_spin.jpg
-    Note the /2.0, same as create_phase_dict in hamiltonian.py
+    Different from CuO2 periodic lattice, the phase simply needs to be 1 or -1
     
     2. Besides, see emails with Mirko on Mar.1, 2018:
-    Suppose Tpd|state_i> = |state_j> = phase*|tmp_state_j> = phase*ph*|canonical_state_j>, then 
+    Suppose Tpd|state_i> = |state_j> = phase*|canonical_state_j>, then 
     tpd = <state_j | Tpd | state_i> 
-        = conj(phase*ph)* <canonical_state_j | Tpp | state_i>
+        = conj(phase)* <canonical_state_j | Tpp | state_i>
     
-    so <canonical_state_j | Tpp | state_i> = tpd/conj(phase*ph)
-                                           = tpd*phase*ph
+    so <canonical_state_j | Tpp | state_i> = tpd/conj(phase)
+                                           = tpd*phase
     
     Because conj(phase) = 1/phase, *phase and /phase in setting tpd and tpp seem to give same results
     But need to change * or / in both tpd and tpp functions
@@ -96,29 +86,18 @@ def make_state_canonical(state):
     canonical_state = state
     phase = 1.0
         
-    # see Mirko's notes VS_state.pdf; note that phase depends on Dx,Dy instead of dx,dy
     if (x2,y2)<(x1,y1):
-        dx = x2-x1
-        dy = y2-y1
-        (ux,uy) = lat.orb_pos[orb2]
-        canonical_state = create_state(s2,orb2,ux,uy,s1,orb1,ux-dx,uy-dy)
-        kx = pam.kx
-        ky = pam.ky
-        
-        _, Rx2, Ry2 = lat.get_unit_cell_rep(x2,y2)
-        _, Rx1, Ry1 = lat.get_unit_cell_rep(x1,y1)
-        Dx = Rx2-Rx1
-        Dy = Ry2-Ry1
-        phase = -np.exp(-(kx*Dx+ky*Dy)*1j/2.0)
+        canonical_state = create_state(s2,orb2,x2,y2,s1,orb1,x1,y1)
+        phase = -1.0
         
     elif (x1,y1)==(x2,y2):           
         if s1==s2:
             o12 = list(sorted([orb1,orb2]))
             if o12[0]==orb2:
-                canonical_state = create_state(s2,orb2,x1,y1,s1,orb1,x1,y1)
+                canonical_state = create_state(s2,orb2,x2,y2,s1,orb1,x1,y1)
                 phase = -1.0  
         elif s1=='dn' and s2=='up':
-            canonical_state = create_state('up',orb2,x1,y1,'dn',orb1,x1,y1)
+            canonical_state = create_state('up',orb2,x2,y2,'dn',orb1,x1,y1)
             phase = -1.0
 
     return canonical_state, phase
@@ -186,60 +165,53 @@ class VariationalSpace:
         '''
         Create a sorted lookup table containing the unique identifiers 
         (uid) of all the states in the variational space.
+        
+        Manhattan distance between a hole and the Cu-site (0,0) does not exceed Mc
+        Then the hole-hole distance cannot be larger than 2*Nc
 
         Returns
         -------
         lookup_tbl: sorted python list.
         '''
         Mc = self.Mc
-        # Loops are over all states for which the Manhattan distance 
-        # between any two particles does not exceed Mc.
         lookup_tbl = []
 
-        for s1 in ['up','dn']:
-            for orb1 in pam.orbs:
-                ux, uy = lat.orb_pos[orb1]
-
-                # Manhattan distance between any two holes does not exceed Mc
-                for vx in range(-Mc+ux,Mc+ux+1):
-                    B = Mc - abs(vx-ux)
-                    for vy in range(-B+uy,B+uy+1):
-                        orb2s, _, _ = lat.get_unit_cell_rep(vx,vy)
-
+        for ux in range(-Mc,Mc+1):
+            Bu = Mc - abs(ux)
+            for uy in range(-Bu,Bu+1):
+                orb1s = lat.get_unit_cell_rep(ux,uy)
+                if orb1s==['NotOnSublattice']:
+                            continue
+                        
+                for vx in range(-Mc,Mc+1):
+                    Bv = Mc - abs(vx)
+                    for vy in range(-Bv,Bv+1):
+                        orb2s = lat.get_unit_cell_rep(vx,vy)
                         if orb2s==['NotOnSublattice']:
                             continue
+                        if calc_manhattan_dist(ux,uy,vx,vy)>2*Mc:
+                            continue
 
-                        for orb2 in orb2s:
-                            for s2 in ['up','dn']:   
-                                # try screen out same spin states
-                                if s1==s2:
-                                    continue
-                                
-                                # consider Pauli principle
-                                if s1==s2 and orb1==orb2 and ux==vx and uy==vy:
-                                    continue 
-                                    
-                                #if pam.if_project_out_two_holes_on_different_Cu == 1:
-                                #    if (orb1 in pam.Cu_orbs and orb2 in pam.Cu_orbs and (ux,uy)!=(vx,vy)):
-                                #        continue
-                                
-                                #if s1=='dn' and s2=='dn':
-                                #    print "candiate state: ", s1,orb1,ux,uy,s2,orb2,vx,vy
-                                state = create_state(s1,orb1,ux,uy,s2,orb2,vx,vy)
-                                canonical_state,_ = make_state_canonical(state)
-                                ts1 = canonical_state['hole1_spin']
-                                ts2 = canonical_state['hole2_spin']
-                                torb1 = canonical_state['hole1_orb']
-                                torb2 = canonical_state['hole2_orb']
-                                tx1, ty1 = canonical_state['hole1_coord']
-                                tx2, ty2 = canonical_state['hole2_coord']
-                                #if pam.if_project_out_two_holes_on_different_Cu == 1:
-                                #    if torb1 in pam.Cu_orbs and torb2 in pam.Cu_orbs and (tx1, ty1)!=(tx2, ty2):
-                                #        continue
+                        for orb1 in orb1s:
+                            for orb2 in orb2s:
+                                for s1 in ['up','dn']:
+                                    for s2 in ['up','dn']:   
+                                        # try screen out same spin states
+                                        #if s1==s2:
+                                        #    continue
 
-                                if self.filter_func(canonical_state):
-                                    uid = self.get_uid(canonical_state)
-                                    lookup_tbl.append(uid)
+                                        # consider Pauli principle
+                                        if s1==s2 and orb1==orb2 and ux==vx and uy==vy:
+                                            continue 
+
+                                        #if s1=='dn' and s2=='dn':
+                                        #    print "candiate state: ", s1,orb1,ux,uy,s2,orb2,vx,vy
+                                        state = create_state(s1,orb1,ux,uy,s2,orb2,vx,vy)
+                                        canonical_state,_ = make_state_canonical(state)
+
+                                        if self.filter_func(canonical_state):
+                                            uid = self.get_uid(canonical_state)
+                                            lookup_tbl.append(uid)
  
         lookup_tbl = list(set(lookup_tbl)) # remove duplicates
         lookup_tbl.sort()
@@ -248,8 +220,9 @@ class VariationalSpace:
             
     def check_in_vs(self,state):
         '''
-        Check if a given state obeys the restrictions of the variational
-        space.
+        Check if a given state obeys the restrictions:
+        the distance between one hole and Cu-site (0,0)
+        and two-hole distance less than cutoff Mc
 
         Parameters
         ----------
@@ -262,19 +235,34 @@ class VariationalSpace:
         Boolean: True or False
         '''
         assert(self.filter_func(state) in [True,False])
-
+        out = True
+        
         if self.filter_func(state) == False:
             return False
-
+        
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
-        return calc_manhattan_dist(x1,y1,x2,y2) <= self.Mc
+        
+        if calc_manhattan_dist(x1,y1,0,0) > self.Mc or \
+            calc_manhattan_dist(x2,y2,0,0) > self.Mc or \
+            calc_manhattan_dist(x1,y1,x2,y2) > 2*self.Mc:
+            out = False
+        return out
 
     def get_uid(self,state):
         '''
         Every state in the variational space is associated with a unique
         identifier (uid) which is an integer number.
-        must use the number of all possible orbitals, namely N=7 !!!
+        must use the number of all possible orbitals !!!
+        
+        Rule for setting uid (example below but showing ideas):
+        Assuming that i1, i2 can take the values -1 and +1. Make sure that uid is always larger or equal to 0. 
+        So add the offset +1 as i1+1. Now the largest value that (i1+1) can take is (1+1)=2. 
+        Therefore the coefficient in front of (i2+1) should be 3. This ensures that when (i2+1) is larger than 0, 
+        it will be multiplied by 3 and the result will be larger than any possible value of (i1+1). 
+        The coefficient in front of (o1+1) needs to be larger than the largest possible value of (i1+1) + 3*(i2+1). 
+        This means that the coefficient in front of (o1+1) must be larger than (1+1) + 3*(1+1) = 8, 
+        so you can choose 9 and you get (i1+1) + 3*(i2+1) + 9*(o1+1) and so on ....
 
         Parameters
         ----------
@@ -285,13 +273,17 @@ class VariationalSpace:
         -------
         uid (integer) or None if the state is not in the variational space.
         '''
-        N = pam.Norb 
-        
+        # Need to check if the state is in the vs, because after hopping
+        # the state can be outside of VS
         if not self.check_in_vs(state):
             return None
-
+        
+        N = pam.Norb 
         s = self.Mc+1 # shift to make values positive
         B1 = 2*self.Mc+4
+        B2 = B1*B1
+        B3 = B1*B2
+        N2 = 4*N*N
 
         s1 = state['hole1_spin']
         s2 = state['hole2_spin']
@@ -304,8 +296,18 @@ class VariationalSpace:
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
 
-        uid = i1 + 2*i2 + 4*(o1 + N*o2 + \
-              N*N*( (y1+1) + (x1+1)*3 + (y2+s)*9 + (x2+s)*B1*9 ) )
+        uid = i1 + 2*i2 + 4*o1 + 4*N*o2 + N2*( (y1+s) + (x1+s)*B1 + (y2+s)*(B2+B1+1) + (x2+s)*(B3+B2+B1)*2 )
+        
+        # check if uid maps back to the original state, namely uid's uniqueness
+        tstate = self.get_state(uid)
+        ts1 = tstate['hole1_spin']
+        ts2 = tstate['hole2_spin']
+        torb1 = tstate['hole1_orb']
+        torb2 = tstate['hole2_orb']
+        tx1, ty1 = tstate['hole1_coord']
+        tx2, ty2 = tstate['hole2_coord']
+        assert((s1,orb1,x1,y1,s2,orb2,x2,y2)==(ts1,torb1,tx1,ty1,ts2,torb2,tx2,ty2))
+            
         return uid
 
     def get_state(self,uid):
@@ -313,33 +315,35 @@ class VariationalSpace:
         Given a unique identifier, return the corresponding state. See 
         get_uid.
 
-        must use the number of all possible orbitals, namely N=7 !!!
-        '''
+        must use the number of all possible orbitals !!!
+        ''' 
         N = pam.Norb
-        
         s = self.Mc+1 # shift to make values positive
         B1 = 2*self.Mc+4
+        B2 = B1*B1
+        B3 = B1*B2
+        N2 = 4*N*N
 
-        x2 = uid/(B1*9*N*N*4) - s
-        uid_ = uid % (B1*9*N*N*4)
-        y2 = uid_/(9*N*N*4) - s
-        uid_ = uid_ % (9*N*N*4)
-        x1 = uid_/(3*N*N*4) - 1
-        uid_ = uid_ % (3*N*N*4)
-        y1 = uid_/(N*N*4) - 1
-        uid_ = uid_ % (N*N*4)
+        x2 = uid/(N2*(B3+B2+B1)*2) - s
+        uid_ = uid % (N2*(B3+B2+B1)*2)
+        y2 = uid_/(N2*(B2+B1+1)) - s
+        uid_ = uid_ % (N2*(B2+B1+1))
+        x1 = uid_/(N2*B1) - s
+        uid_ = uid_ % (N2*B1)
+        y1 = uid_/N2 - s
+        uid_ = uid_ % N2
         o2 = uid_/(4*N)
         uid_ = uid_ % (4*N)
-        o1 = uid_/4
+        o1 = uid_/4 
         uid_ = uid_ % 4
-        i2 = uid_/2
-        i1 = uid_%2
+        i2 = uid_/2 
+        i1 = uid_%2 
         
         orb2 = lat.int_orb[o2]
         orb1 = lat.int_orb[o1]
         s2 = lat.int_spin[i2]
         s1 = lat.int_spin[i1]
-
+        
         state = create_state(s1,orb1,x1,y1,s2,orb2,x2,y2)
         return state
 
@@ -369,5 +373,3 @@ class VariationalSpace:
                 return index
             else:
                 return None
-
-

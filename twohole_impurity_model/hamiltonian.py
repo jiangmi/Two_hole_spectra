@@ -355,35 +355,6 @@ def get_Aw_pp_state():
         
     return pp_states
 
-def create_phase_dict(kx,ky,VS):
-    '''
-    Create a dictionary containing the phase values 
-    exp(-kx*Rx*1j/2.0-ky*Ry*1j/2.0) for all relevant (Rx,Ry). Used
-    to avoid recalculating these values.
-    
-    directions_to_vecs assumes the unit cell length is 2, so need /2.0
-
-    Parameters
-    ----------
-    kx, ky: momentum in x, y direction.
-    VS: VariationalSpace class from the module variationalSpace. Only
-        VS.Mc is used to determine which (Rx,Ry) values are needed.
-
-    Returns
-    -------
-    phase: dictionary, keys are tuples (Rx,Ry) and items are the
-        corresponding phase values exp(-kx*Rx*1j/2.0-ky*Ry*1j/2.0).
-        Additional keys are 'momentum' and 'Mc'.
-    '''
-    Mc = VS.Mc
-    phase = {}
-    phase['Mc'] = VS.Mc
-    phase['momentum'] = (kx,ky)
-    for Rx in range(-Mc-4,Mc+5):
-        for Ry in range(-Mc-4,Mc+5):
-            phase[(Rx,Ry)] = np.exp(-(kx*Rx+ky*Ry)*1j/2.0)
-    return phase
-
 def set_matrix_element(row,col,data,new_state,col_index,VS,element):
     '''
     Helper function that is used to set elements of a matrix using the
@@ -410,7 +381,7 @@ def set_matrix_element(row,col,data,new_state,col_index,VS,element):
         row.append(row_index)
         col.append(col_index)
 
-def create_tpd_nn_matrix(phase,VS):
+def create_tpd_nn_matrix(VS):
     '''
     Create nearest neighbor (NN) pd hopping part of the Hamiltonian
 
@@ -459,91 +430,53 @@ def create_tpd_nn_matrix(phase,VS):
         orb2 = start_state['hole2_orb']
         x1, y1 = start_state['hole1_coord']
         x2, y2 = start_state['hole2_coord']
-        
-        #print s1,s2,orb1,orb2,x1, y1,x2, y2
 
-        # some d-orbitals might have no tpd
+        # hole 1 hops: some d-orbitals might have no tpd
         if if_tpd_nn_hopping[orb1] == 1:
-            # hole 1 hops (coordninates need to be shifted -> phase change)
             for dir_ in tpd_nn_hopping_directions[orb1]:
                 vx, vy = directions_to_vecs[dir_]
-
-                # recall that x1, y1 are kept in (1,0), (0,1), (0,0)
-                x1_new, y1_new = x1 + vx, y1 + vy
-
-                # it is possible that up hole hops to neighboring unit cell
-                # so need to get the position of reference site(Cu) after hopping 
-                orb, Rx_new, Ry_new = lat.get_unit_cell_rep(x1_new,y1_new)
-
-                if orb == ['NotOnSublattice']:
-                    continue
-
-                # get the coordinates relative to the new unit cell origin
-                x1_shift = x1_new - Rx_new
-                y1_shift = y1_new - Ry_new
-
-                # dn hole needs change coor corresponding to the new unit cell of up hole
-                # but not change orb. see above and note_on_set_hopping_term.jpg
-                x2_shift = x2 - Rx_new
-                y2_shift = y2 - Ry_new
-
-                orbs1_new, _, _ = lat.get_unit_cell_rep(x1_shift,y1_shift)
-                orbs2_new, _, _ = lat.get_unit_cell_rep(x2_shift,y2_shift)
-
-                if orbs1_new == ['NotOnSublattice'] or orbs2_new == ['NotOnSublattice']:
+                orbs1 = lat.get_unit_cell_rep(x1+vx, y1+vy)
+                if orbs1 == ['NotOnSublattice']:
                     continue
 
                 # consider t_pd for all cases
                 # recall that when up hole hops, dn hole should not change orb
-                for o1 in orbs1_new:
+                for o1 in orbs1:
                     if if_tpd_nn_hopping[o1] == 0:
                         continue
                     # consider Pauli principle
-                    if s1==s2 and o1==orb2 and x1_shift==x2_shift and y1_shift==y2_shift:
+                    if s1==s2 and o1==orb2 and (x1+vx,y1+vy)==(x2,y2):
                         continue
-                        
-                    #if pam.if_project_out_two_holes_on_different_Cu == 1:
-                    #    if (o1 in pam.Cu_orbs and orb2 in pam.Cu_orbs and (x1_shift,y1_shift)!=(x2_shift,y2_shift)):
-                    #        continue
                                     
-                    tmp_state = vs.create_state(s1,o1,  x1_shift,y1_shift,\
-                                                s2,orb2,x2_shift,y2_shift)
+                    tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
                     new_state,ph = vs.make_state_canonical(tmp_state)
                                     
                     o12 = tuple([orb1, dir_, o1])
-                    
-                    # see make_state_canonical in variational_space.py for phasec 
                     if o12 in tpd_orbs:
-                        set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpd_nn_hopping_factor[o12]*phase[(Rx_new,Ry_new)]*ph)
+                        set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
 
         # hole 2 hops; some d-orbitals might have no tpd
         if if_tpd_nn_hopping[orb2] == 1:
             for dir_ in tpd_nn_hopping_directions[orb2]:
                 vx, vy = directions_to_vecs[dir_]
-                x2_new, y2_new = x2 + vx, y2 + vy
-                orbs2_new, _, _ = lat.get_unit_cell_rep(x2_new, y2_new)
+                orbs2 = lat.get_unit_cell_rep(x2+vx, y2+vy)
 
-                if orbs2_new == ['NotOnSublattice']:
+                if orbs2 == ['NotOnSublattice']:
                     continue
-                for o2 in orbs2_new:
+                    
+                for o2 in orbs2:
                     if if_tpd_nn_hopping[o2] == 0:
                         continue
                     # consider Pauli principle
-                    if s1==s2 and orb1==o2 and x1==x2_new and y1==y2_new:
+                    if s1==s2 and orb1==o2 and (x1,y1)==(x2+vx, y2+vy):
                         continue
-                        
-                    #if pam.if_project_out_two_holes_on_different_Cu == 1:
-                    #    if (orb1 in pam.Cu_orbs and o2 in pam.Cu_orbs and (x1,y1)!=(x2_new,y2_new)):
-                    #        continue
                             
-                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2_new,y2_new)
+                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
                     new_state,ph = vs.make_state_canonical(tmp_state)
                         
                     o12 = tuple([orb2, dir_, o2])
                     if o12 in tpd_orbs:
-                        set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpd_nn_hopping_factor[o12]*ph)
+                        set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)
@@ -555,7 +488,7 @@ def create_tpd_nn_matrix(phase,VS):
     
     return out
 
-def create_tpp_nn_matrix(phase,VS): 
+def create_tpp_nn_matrix(VS): 
     '''
     similar to comments in create_tpd_nn_matrix
     '''   
@@ -578,79 +511,48 @@ def create_tpp_nn_matrix(phase,VS):
         x1, y1 = start_state['hole1_coord']
         x2, y2 = start_state['hole2_coord']
         
-        # only p-orbitals has t_pp 
+        # hole1 hops: only p-orbitals has t_pp 
         if orb1 in pam.O_orbs: 
-            # hole 1 hops (coordninates need to be shifted -> phase change)
             for dir_ in tpp_nn_hopping_directions:
                 vx, vy = directions_to_vecs[dir_]
-                x1_new, y1_new = x1 + vx, y1 + vy
-
-                # get the position of reference site(Cu) in the same unit cell 
-                orb, Rx_new, Ry_new = lat.get_unit_cell_rep(x1_new,y1_new)
-                if orb == ['NotOnSublattice']:
+                orbs1 = lat.get_unit_cell_rep(x1+vx, y1+vy)
+                if orbs1 == ['NotOnSublattice'] or orbs1 == pam.Cu_orbs:
                     continue
 
-                x1_shift = x1_new - Rx_new
-                y1_shift = y1_new - Ry_new
-                x2_shift = x2 - Rx_new
-                y2_shift = y2 - Ry_new
-
-                orbs1_new, _, _ = lat.get_unit_cell_rep(x1_shift,y1_shift)
-                orbs2_new, _, _ = lat.get_unit_cell_rep(x2_shift,y2_shift)
-
-                # consider t_pp for all cases
-                for o1 in orbs1_new:
-                    if s1==s2 and o1==orb2 and x1_shift==x2_shift and y1_shift==y2_shift:
+                # consider t_pd for all cases
+                # recall that when up hole hops, dn hole should not change orb
+                for o1 in orbs1:
+                    # consider Pauli principle
+                    if s1==s2 and o1==orb2 and (x1+vx,y1+vy)==(x2,y2):
                         continue
-                        
-                    #if pam.if_project_out_two_holes_on_different_Cu == 1:
-                    #    if (o1 in pam.Cu_orbs and orb2 in pam.Cu_orbs and (x1_shift,y1_shift)!=(x2_shift,y2_shift)):
-                    #        continue
                             
-                    tmp_state = vs.create_state(s1,o1,  x1_shift,y1_shift,\
-                                                s2,orb2,x2_shift,y2_shift)
+                    tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
                     new_state,ph = vs.make_state_canonical(tmp_state)
-                        
+                                    
                     o12 = sorted([orb1, dir_, o1])
                     o12 = tuple(o12)
-                    set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpp_nn_hopping_factor[o12]*phase[(Rx_new,Ry_new)]*ph)
-                    
-                    # debug:
-                    #row_ind = VS.get_index(new_state)
-                    #if i==38 and row_ind==85:
-                    #    statei = VS.get_state(VS.lookup_tbl[i])
-                    #    print 'statei = ',i, statei
-                    #    statei = VS.get_state(VS.lookup_tbl[row_ind])
-                    #    print 'statei = ',row_ind,statei
-                    #    print 'phase = ', phase[(Rx_new,Ry_new)], ph, phase[(Rx_new,Ry_new)]*ph
+                    set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
 
         # hole 2 hops, only p-orbitals has t_pp 
         if orb2 in pam.O_orbs:
             for dir_ in tpp_nn_hopping_directions:
                 vx, vy = directions_to_vecs[dir_]
-                x2_new, y2_new = x2 + vx, y2 + vy
-                
-                orbs2_new, _, _ = lat.get_unit_cell_rep(x2_new, y2_new)
-                if orbs2_new == ['NotOnSublattice']:
+                orbs2 = lat.get_unit_cell_rep(x2+vx, y2+vy)
+
+                if orbs2 == ['NotOnSublattice'] or orbs2 == pam.Cu_orbs:
                     continue
                     
-                for o2 in orbs2_new:
+                for o2 in orbs2:
                     # consider Pauli principle
-                    if s1==s2 and orb1==o2 and x1==x2_new and y1==y2_new:
+                    if s1==s2 and orb1==o2 and (x1,y1)==(x2+vx, y2+vy):
                         continue
-                        
-                    #if pam.if_project_out_two_holes_on_different_Cu == 1:
-                    #    if (orb1 in pam.Cu_orbs and o2 in pam.Cu_orbs and (x1,y1)!=(x2_new,y2_new)):
-                    #        continue
                             
-                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2_new,y2_new)
+                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
                     new_state,ph = vs.make_state_canonical(tmp_state)
 
                     o12 = sorted([orb2, dir_, o2])
                     o12 = tuple(o12)
-                    set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpp_nn_hopping_factor[o12]*ph)
+                    set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)
@@ -688,23 +590,17 @@ def create_edep_diag_matrix(VS):
             diag_el = 0
         if orb2 in pam.O_orbs: 
             diag_el += 1.
-            
-        # apply a large energy cutoff to configurations with
-        # two holes on different Cu to effectively forbid those configuration
-        x1, y1 = state['hole1_coord']
-        x2, y2 = state['hole2_coord']
-        if pam.if_project_out_two_holes_on_different_Cu == 1:
-            if orb1 in pam.Cu_orbs and orb2 in pam.Cu_orbs and (x1,y1)!=(x2,y2): 
-                diag_el = 100.
 
         data.append(diag_el); row.append(i); col.append(i)
 
     row = np.array(row)
     col = np.array(col)
     data = np.array(data)
+    
     # check if hoppings occur within groups of (up,up), (dn,dn), and (up,dn) 
     assert(check_spin_group(row,col,data,VS)==True)
     out = sps.coo_matrix((data,(row,col)),shape=(dim,dim))
+    
     return out
 
 def get_double_occu_list(VS):
@@ -756,8 +652,9 @@ def get_double_occu_list(VS):
                 p_list.append(i)
                 #print "p_double: ", s1,orb1,x1,y1,s2,orb2,x2,y2
 
-    #print "len(p_list)", len(p_list)
-    #assert len(d_list)==Nd
+    print "len(d_list)", len(d_list), 'Nd=',Nd
+    print "len(p_list)", len(p_list), 'Np=',Np
+    assert len(d_list)==Nd
     #assert len(p_list)==Np
     
     return d_list, p_list
