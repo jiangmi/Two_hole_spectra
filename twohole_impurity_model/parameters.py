@@ -2,7 +2,7 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 20
+Mc = 3
 ed = 0
 ep = 3.5
 
@@ -19,7 +19,7 @@ ep = 3.5
 Norb = 7
 if Norb==3 or Norb==7:
     #tpd_tpp_set = [(1.3, 0.00001),(1.3, 0.00001)]
-    tpd = 1.3
+    tpd = 0.0001
     tpp = 0.6
 elif Norb==9:
     pds = 1.5

@@ -28,10 +28,12 @@ def count_VS(VS):
         elif s1=='dn' and s2=='dn':
             count_dndn += 1
 
-    print 'No. of states with count_upup, count_updn, count_dnup, count_dndn:'
-    print count_upup, count_updn, count_dnup, count_dndn
+    print 'No. of states with count_upup, count_updn, count_dnup, count_dndn:',\
+        count_upup, count_updn, count_dnup, count_dndn
     
+    # only correct in most times, not mandatory
     assert(count_upup==count_dndn)
+    
     return count_upup, count_updn, count_dnup, count_dndn
 
 def find_singlet_triplet_partner(state,VS):
@@ -41,8 +43,6 @@ def find_singlet_triplet_partner(state,VS):
 
     Parameters
     ----------
-    phase: dictionary containing the phase values exp(-kx*Rx*1j/2.0-ky*Ry*1j/2.0).
-        Created with hamiltonian.create_phase_dict.
     VS: VS: VariationalSpace class from the module variational_space
 
     Returns
@@ -169,7 +169,7 @@ def find_singlet_triplet_partner_d_double(state,VS):
 
     Parameters
     ----------
-    VS: VS: VariationalSpace class from the module variational_space
+    VS: VariationalSpace class from the module variational_space
 
     Returns
     -------
@@ -251,7 +251,7 @@ def create_singlet_triplet_basis_change_matrix_d_double(VS,d_double):
                     # convention: original state col i stores singlet and 
                     #             partner state col j stores triplet
                     data.append(1.0);  row.append(i); col.append(i)
-                    data.append(ph);   row.append(j); col.append(i)
+                    data.append(-ph);  row.append(j); col.append(i)
                     S_val[i]  = 0
                     Sz_val[i] = 1
 
@@ -261,7 +261,7 @@ def create_singlet_triplet_basis_change_matrix_d_double(VS,d_double):
 
                     # append matrix elements for triplet states
                     data.append(1.0);  row.append(i); col.append(j)
-                    data.append(-ph);  row.append(j); col.append(j)
+                    data.append(ph);   row.append(j); col.append(j)
                     S_val[j]  = 1
                     Sz_val[j] = 1
 

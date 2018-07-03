@@ -257,104 +257,6 @@ def get_interaction_mat(sym):
         
     return state_order, interaction_mat, Stot, Sz_set
 
-def get_Aw_dd_state(sym):
-    '''
-    Currently useless. States are obtained in create_interaction_matrix
-    Starting vector. If only ground state, Use something randomly initialized for lanczos
-    If computing spectral function, use desired state
-        
-    Get the state list for calculating A(w) in spectral_weight_lanczos.py
-    There are two types of list: one for G_dd and one for G_d8. See appendix of Eskes's PRB 1990
-    dd_states are subset of d8_states
-    '''                    
-    if sym=='1A1':
-        dd_states = [('up','dx2y2','dn','dx2y2')]
-        d8_states = [('up','d3z2r2','dn','d3z2r2'), ('up','dx2y2','dn','dx2y2'),\
-                     ('up','dxy','dn','dxy'), ('up','dxz','dn','dxz'),('up','dyz','dn','dyz')]
-        coef_frac_parentage = {('up','dx2y2','dn','dx2y2'): 1.0}
-    if sym=='1A2':
-        # singlet states should have opposite spin
-        dd_states = [('up','dx2y2','dn','dxy'),('up','dxy','dn','dx2y2')]
-        d8_states = [('up','dx2y2','dn','dxy'),('dn','dx2y2','up','dxy')]
-        coef_frac_parentage = {('up','dx2y2','dn','dxy'): 0.5, \
-                               ('up','dxy','dn','dx2y2'): 0.5}
-    if sym=='3A2':
-        # triplet states can have opposite or same spin
-        dd_states = [('up','dx2y2','up','dxy'),('up','dx2y2','dn','dxy')]
-        d8_states = [('up','dx2y2','up','dxy'),('up','dx2y2','dn','dxy'),\
-                     ('dn','dx2y2','up','dxy'),('dn','dx2y2','dn','dxy'),\
-                     ('up','dxz','dn','dxz'),('up','dyz','dn','dyz')]
-        coef_frac_parentage = {('up','dx2y2','up','dxy'): 1.0,\
-                               ('up','dx2y2','dn','dxy'): 0.5}
-    if sym=='1B1':
-        dd_states = [('up','dx2y2','dn','d3z2r2')]
-        d8_states = [('up','d3z2r2','dn','dx2y2'),('up','dx2y2','dn','d3z2r2'),\
-                     ('up','dxz','dn','dyz'),('up','dyz','dn','dxz')]
-        coef_frac_parentage = {('up','dx2y2','dn','d3z2r2'): 0.5}
-    if sym=='3B1':
-        dd_states = [('up','d3z2r2','up','dx2y2'),('up','dx2y2','dn','d3z2r2')]
-        d8_states = [('up','d3z2r2','up','dx2y2'),('up','d3z2r2','dn','dx2y2'),\
-                     ('up','dx2y2','dn','d3z2r2'),('dn','d3z2r2','dn','dx2y2')]
-        coef_frac_parentage = {('up','d3z2r2','up','dx2y2'): 1.0,\
-                               ('up','dx2y2','dn','d3z2r2'): 0.5}
-    if sym=='1B2':
-        dd_states = []
-        d8_states = [('up','d3z2r2','dn','dxy'),('dn','d3z2r2','up','dxy'),\
-                     ('up','dxz','dn','dyz'),('dn','dxz','up','dyz')]
-        coef_frac_parentage = {}
-    if sym=='3B2':
-        dd_states = []
-        d8_states = [('up','d3z2r2','up','dxy'),('up','d3z2r2','dn','dxy'),\
-                     ('dn','d3z2r2','up','dxy'),('dn','d3z2r2','dn','dxy')]
-        coef_frac_parentage = {}
-    if sym=='1E':
-        dd_states = [('up','dx2y2','dn','dxz'),('up','dx2y2','dn','dyz')]
-        d8_states = [('up','d3z2r2','dn','dxz'),('dn','d3z2r2','up','dxz'),\
-                     ('up','d3z2r2','dn','dyz'),('dn','d3z2r2','up','dyz'),\
-                     ('up','dx2y2','dn','dxz'),('dn','dx2y2','up','dxz'),\
-                     ('up','dx2y2','dn','dyz'),('dn','dx2y2','up','dyz'),\
-                     ('up','dxy','dn','dxz'),('dn','dxy','up','dxz'),\
-                     ('up','dxy','dn','dyz'),('dn','dxy','up','dyz')]
-        coef_frac_parentage = {('up','dx2y2','dn','dxz'): 1.0,\
-                               ('up','dx2y2','dn','dyz'): 1.0}
-    if sym=='3E':
-        dd_states = [('up','dx2y2','up','dxz'),('up','dx2y2','dn','dxz'),\
-                     ('up','dx2y2','up','dyz'),('up','dx2y2','dn','dyz')]
-        d8_states = [('up','d3z2r2','up','dxz'),('up','d3z2r2','dn','dxz'),\
-                     ('dn','d3z2r2','up','dxz'),('dn','d3z2r2','dn','dxz'),\
-                     ('up','d3z2r2','up','dyz'),('up','d3z2r2','dn','dyz'),\
-                     ('dn','d3z2r2','up','dyz'),('dn','d3z2r2','dn','dyz'),\
-                     ('up','dx2y2','up','dxz'),('up','dx2y2','dn','dxz'),\
-                     ('dn','dx2y2','up','dxz'),('dn','dx2y2','dn','dxz'),\
-                     ('up','dx2y2','up','dyz'),('up','dx2y2','dn','dyz'),\
-                     ('dn','dx2y2','up','dyz'),('dn','dx2y2','dn','dyz'),\
-                     ('up','dxy','up','dxz'),('up','dxy','dn','dxz'),\
-                     ('dn','dxy','up','dxz'),('dn','dxy','dn','dxz'),\
-                     ('up','dxy','up','dyz'),('up','dxy','dn','dyz'),\
-                     ('dn','dxy','up','dyz'),('dn','dxy','dn','dyz')]
-        coef_frac_parentage = {('up','dx2y2','up','dxz'): 2.0,\
-                               ('up','dx2y2','dn','dxz'): 1.0,\
-                               ('up','dx2y2','up','dyz'): 2.0,\
-                               ('up','dx2y2','dn','dyz'): 1.0}
-        
-    return dd_states, d8_states, coef_frac_parentage
-
-def get_Aw_pp_state():
-    '''
-    Starting vector. If only ground state, Use something randomly initialized for lanczos
-    If computing spectral function, use desired state
-    
-    Get the state list for calculating A(w) for two holes locating on p-orbitals
-    '''                    
-    if pam.Norb==3 or pam.Norb==7:
-        pp_states = [('up','px','dn','px'),('up','px','dn','py'),('up','px','up','py'),\
-                     ('up','dx2y2','up','px'),('up','dx2y2','dn','px')]
-    elif pam.Norb==9:
-        pp_states = [('up','px1','dn','px1'),('up','px1','dn','py1'),('up','px1','dn','px2'),('up','px1','dn','py2'),\
-                                             ('up','px1','up','py1'),('up','px1','up','px2'),('up','px1','up','py2')]
-        
-    return pp_states
-
 def set_matrix_element(row,col,data,new_state,col_index,VS,element):
     '''
     Helper function that is used to set elements of a matrix using the
@@ -387,8 +289,6 @@ def create_tpd_nn_matrix(VS):
 
     Parameters
     ----------
-    phase: dictionary containing the phase values exp(-kx*Rx*1j/2.0-ky*Ry*1j/2.0).
-        Created with create_phase_dict.
     VS: VariationalSpace class from the module variationalSpace
     
     Returns
@@ -400,15 +300,6 @@ def create_tpd_nn_matrix(VS):
     -------------------------------
     By default when converting to CSR or CSC format, duplicate (i,j)
     entries will be summed together
-    
-    IMPORTANT
-    -------------------------------
-    See note_on_set_hopping_term.jpg for how to set up the hopping elements
-    The convention is to assign the phase to hole1 hopping 
-    When hole1 hops, there is an additional phase 
-    It seems hole2 can hop to another orb, but actually not, 
-    j'+n-1=j-n only change hole2's coordinate, not the orb
-    For multiorbital cases, should make sure that hole2 does not change orb
     '''    
     print "start create_tpd_nn_matrix"
     print "=========================="
@@ -439,8 +330,7 @@ def create_tpd_nn_matrix(VS):
                 if orbs1 == ['NotOnSublattice']:
                     continue
 
-                # consider t_pd for all cases
-                # recall that when up hole hops, dn hole should not change orb
+                # consider t_pd for all cases; when up hole hops, dn hole should not change orb
                 for o1 in orbs1:
                     if if_tpd_nn_hopping[o1] == 0:
                         continue
@@ -448,19 +338,19 @@ def create_tpd_nn_matrix(VS):
                     if s1==s2 and o1==orb2 and (x1+vx,y1+vy)==(x2,y2):
                         continue
                                     
-                    tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
+                    if vs.check_in_vs_condition(x1+vx,y1+vy,x2,y2):
+                        tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
                                     
-                    o12 = tuple([orb1, dir_, o1])
-                    if o12 in tpd_orbs:
-                        set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
+                        o12 = tuple([orb1, dir_, o1])
+                        if o12 in tpd_orbs:
+                            set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
 
         # hole 2 hops; some d-orbitals might have no tpd
         if if_tpd_nn_hopping[orb2] == 1:
             for dir_ in tpd_nn_hopping_directions[orb2]:
                 vx, vy = directions_to_vecs[dir_]
                 orbs2 = lat.get_unit_cell_rep(x2+vx, y2+vy)
-
                 if orbs2 == ['NotOnSublattice']:
                     continue
                     
@@ -471,12 +361,13 @@ def create_tpd_nn_matrix(VS):
                     if s1==s2 and orb1==o2 and (x1,y1)==(x2+vx, y2+vy):
                         continue
                             
-                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
+                    if vs.check_in_vs_condition(x1,y1,x2+vx,y2+vy):
+                        tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
                         
-                    o12 = tuple([orb2, dir_, o2])
-                    if o12 in tpd_orbs:
-                        set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
+                        o12 = tuple([orb2, dir_, o2])
+                        if o12 in tpd_orbs:
+                            set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)
@@ -519,19 +410,19 @@ def create_tpp_nn_matrix(VS):
                 if orbs1 == ['NotOnSublattice'] or orbs1 == pam.Cu_orbs:
                     continue
 
-                # consider t_pd for all cases
-                # recall that when up hole hops, dn hole should not change orb
+                # consider t_pd for all cases; when up hole hops, dn hole should not change orb
                 for o1 in orbs1:
                     # consider Pauli principle
                     if s1==s2 and o1==orb2 and (x1+vx,y1+vy)==(x2,y2):
                         continue
                             
-                    tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
+                    if vs.check_in_vs_condition(x1+vx,y1+vy,x2,y2):
+                        tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
                                     
-                    o12 = sorted([orb1, dir_, o1])
-                    o12 = tuple(o12)
-                    set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
+                        o12 = sorted([orb1, dir_, o1])
+                        o12 = tuple(o12)
+                        set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
 
         # hole 2 hops, only p-orbitals has t_pp 
         if orb2 in pam.O_orbs:
@@ -546,13 +437,14 @@ def create_tpp_nn_matrix(VS):
                     # consider Pauli principle
                     if s1==s2 and orb1==o2 and (x1,y1)==(x2+vx, y2+vy):
                         continue
-                            
-                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
+                        
+                    if vs.check_in_vs_condition(x1,y1,x2+vx,y2+vy):        
+                        tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
 
-                    o12 = sorted([orb2, dir_, o2])
-                    o12 = tuple(o12)
-                    set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
+                        o12 = sorted([orb2, dir_, o2])
+                        o12 = tuple(o12)
+                        set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)
@@ -582,8 +474,6 @@ def create_edep_diag_matrix(VS):
         orb1 = state['hole1_orb']
         orb2 = state['hole2_orb']
 
-        # no need to consider Pauli principle here
-        # which has been considered in VS.create_lookup_tbl
         if orb1 in pam.O_orbs: 
             diag_el = 1.
         else:
@@ -608,19 +498,12 @@ def get_double_occu_list(VS):
     Get the list of states that two holes are both d or p-orbitals
     used in the following create_interaction_matrix routine
     
-    for d_doulbe list, there are 5 orbitals, the number of double-occupied:
+    for d_double list, there are 5 orbitals, the number of double-occupied:
     up-up:  C^2_NCu = NCu*(NCu-1)/2
     dn-dn:  C^2_NCu = NCu*(NCu-1)/2
     up-dn:  NCu^2
     dn-up:  same as up-dn in case of double_occu, so only keep up-dn
     so the total number is NCu*(2*NCu-1)
-    
-    for p_doulbe list (9-orbital case), there are 2 orbitals, the number of double-occupied:
-    up-up:  1
-    dn-dn:  1
-    up-dn:  4
-    dn-up:  same as up-dn in case of double_occu, so only keep up-dn
-    so the total number is 6*2 (*2 because two O sites in unit celll)
     '''
     dim = VS.dim
     d_list = []
@@ -653,7 +536,7 @@ def get_double_occu_list(VS):
                 #print "p_double: ", s1,orb1,x1,y1,s2,orb2,x2,y2
 
     print "len(d_list)", len(d_list), 'Nd=',Nd
-    print "len(p_list)", len(p_list), 'Np=',Np
+    #print "len(p_list)", len(p_list), 'Np=',Np
     assert len(d_list)==Nd
     #assert len(p_list)==Np
     
@@ -730,6 +613,7 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val):
     row = np.array(row)
     col = np.array(col)
     data = np.array(data)
+    
     # check if hoppings occur within groups of (up,up), (dn,dn), and (up,dn) 
     assert(check_spin_group(row,col,data,VS)==True)
     out = sps.coo_matrix((data,(row,col)),shape=(dim,dim))
@@ -774,6 +658,7 @@ def create_interaction_matrix_Norb3(VS,d_double,p_double):
     row = np.array(row)
     col = np.array(col)
     data = np.array(data)
+    
     # check if hoppings occur within groups of (up,up), (dn,dn), and (up,dn) 
     assert(check_spin_group(row,col,data,VS)==True)
     out = sps.coo_matrix((data,(row,col)),shape=(dim,dim))
@@ -796,7 +681,7 @@ def get_pp_state_indices(VS):
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
 
-        if o1 in pam.O_orbs and o2 in pam.O_orbs and (x1,y1) in [(1,0),(0,1)] and (x2,y2) in [(1,0),(0,1)]:
+        if o1 in pam.O_orbs and o2 in pam.O_orbs:
             pp_state_indices.append(i)
             print "pp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
     
@@ -818,7 +703,7 @@ def get_dp_state_indices(VS):
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
             
-        if o1 in pam.Cu_orbs and o2 in pam.O_orbs and (x1,y1)==(0,0) and (x2,y2) in [(1,0),(0,1)]:
+        if o1 in pam.Cu_orbs and o2 in pam.O_orbs and (x1,y1)==(0,0):
             dp_state_indices.append(i)
             print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
     
@@ -878,6 +763,7 @@ def check_spin_group(row,col,data,VS):
     '''
     out = True
     dim = len(data)
+    assert(len(row)==len(col)==len(data))
     
     for i in range(0,dim):
         irow = row[i]
@@ -892,9 +778,21 @@ def check_spin_group(row,col,data,VS):
         
         rs = sorted([rs1,rs2])
         cs = sorted([cs1,cs2])
-                
+        
         if rs!=cs:
+            ro1 = rstate['hole1_orb']
+            ro2 = rstate['hole2_orb']
+            rx1, ry1 = rstate['hole1_coord']
+            rx2, ry2 = rstate['hole2_coord']
+            
+            co1 = cstate['hole1_orb']
+            co2 = cstate['hole2_orb']
+            cx1, cy1 = cstate['hole1_coord']
+            cx2, cy2 = cstate['hole2_coord']
+        
             print 'Error:'+str(rs)+' hops to '+str(cs)
+            print 'Error occurs for state',irow,rs1,ro1,rx1,ry1,rs2,ro2,rx2,ry2, \
+                  'hops to state',icol,cs1,co1,cx1,cy1,cs2,co2,cx2,cy2
             out = False
             break
     return out

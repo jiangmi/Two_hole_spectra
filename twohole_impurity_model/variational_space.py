@@ -18,7 +18,6 @@ def create_state(s1,orb1,x1,y1,s2,orb2,x2,y2):
     s1, s2   : string of spin
     orb_up, orb_dn : string of orb
     x_up, y_up: integer coordinates of hole1
-                Must be (1,0), (0,1), (0,0)
     x_dn, y_dn: integer coordinates of hole2
 
     Note
@@ -28,6 +27,7 @@ def create_state(s1,orb1,x1,y1,s2,orb2,x2,y2):
     exceeds Mc.
     '''
     assert not (((x1,y1))==(x2,y2) and s1==s2 and orb1==orb2)
+    assert(check_in_vs_condition(x1,y1,x2,y2))
     
     state = {'hole1_spin' :s1,\
              'hole1_orb'  :orb1,\
@@ -35,6 +35,7 @@ def create_state(s1,orb1,x1,y1,s2,orb2,x2,y2):
              'hole2_spin' :s2,\
              'hole2_orb'  :orb2,\
              'hole2_coord':(x2,y2)}
+    
     return state
 
 def make_state_canonical(state):
@@ -44,11 +45,10 @@ def make_state_canonical(state):
     
     The sign change due to anticommuting creation operators should be 
     taken into account so that phase below has a negative sign
-    
     =============================================================
     Case 1: 
-    when hole2 is on left of hole 1, switch them such that
-    Orders the hole coordinates in such a way that the coordinates 
+    when hole2 is on left of hole 1, switch them and
+    order the hole coordinates in such a way that the coordinates 
     of the left creation operator are lexicographically
     smaller than those of the right.
     =======================================================
@@ -110,6 +110,18 @@ def calc_manhattan_dist(x1,y1,x2,y2):
     out = abs(x1-x2) + abs(y1-y2)
     return out
 
+def check_in_vs_condition(x1,y1,x2,y2):
+    '''
+    Restrictions: the distance between one hole and Cu-site (0,0)
+    and two-hole distance less than cutoff Mc
+    '''     
+    if calc_manhattan_dist(x1,y1,0,0) > pam.Mc or \
+        calc_manhattan_dist(x2,y2,0,0) > pam.Mc or \
+        calc_manhattan_dist(x1,y1,x2,y2) > 2*pam.Mc:
+        return False
+    else:
+        return True
+
 class VariationalSpace:
     '''
     Distance (L1-norm) between any two particles must not exceed a
@@ -167,7 +179,7 @@ class VariationalSpace:
         (uid) of all the states in the variational space.
         
         Manhattan distance between a hole and the Cu-site (0,0) does not exceed Mc
-        Then the hole-hole distance cannot be larger than 2*Nc
+        Then the hole-hole distance cannot be larger than 2*Mc
 
         Returns
         -------
@@ -181,7 +193,7 @@ class VariationalSpace:
             for uy in range(-Bu,Bu+1):
                 orb1s = lat.get_unit_cell_rep(ux,uy)
                 if orb1s==['NotOnSublattice']:
-                            continue
+                    continue
                         
                 for vx in range(-Mc,Mc+1):
                     Bv = Mc - abs(vx)
@@ -206,8 +218,10 @@ class VariationalSpace:
 
                                         #if s1=='dn' and s2=='dn':
                                         #    print "candiate state: ", s1,orb1,ux,uy,s2,orb2,vx,vy
-                                        state = create_state(s1,orb1,ux,uy,s2,orb2,vx,vy)
-                                        canonical_state,_ = make_state_canonical(state)
+                                        
+                                        if check_in_vs_condition(ux,uy,vx,vy):
+                                            state = create_state(s1,orb1,ux,uy,s2,orb2,vx,vy)
+                                            canonical_state,_ = make_state_canonical(state)
 
                                         if self.filter_func(canonical_state):
                                             uid = self.get_uid(canonical_state)
@@ -220,14 +234,11 @@ class VariationalSpace:
             
     def check_in_vs(self,state):
         '''
-        Check if a given state obeys the restrictions:
-        the distance between one hole and Cu-site (0,0)
-        and two-hole distance less than cutoff Mc
+        Check if a given state is in VS
 
         Parameters
         ----------
-        state: dictionary created by one of the functions which create 
-            states.
+        state: dictionary created by one of the functions which create states.
         Mc: integer cutoff for the Manhattan distance.
 
         Returns
@@ -235,25 +246,18 @@ class VariationalSpace:
         Boolean: True or False
         '''
         assert(self.filter_func(state) in [True,False])
-        out = True
-        
-        if self.filter_func(state) == False:
-            return False
-        
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
-        
-        if calc_manhattan_dist(x1,y1,0,0) > self.Mc or \
-            calc_manhattan_dist(x2,y2,0,0) > self.Mc or \
-            calc_manhattan_dist(x1,y1,x2,y2) > 2*self.Mc:
-            out = False
-        return out
+  
+        if check_in_vs_condition(x1,y1,x2,y2):
+            return True
+        else:
+            return False
 
     def get_uid(self,state):
         '''
         Every state in the variational space is associated with a unique
         identifier (uid) which is an integer number.
-        must use the number of all possible orbitals !!!
         
         Rule for setting uid (example below but showing ideas):
         Assuming that i1, i2 can take the values -1 and +1. Make sure that uid is always larger or equal to 0. 
@@ -266,15 +270,13 @@ class VariationalSpace:
 
         Parameters
         ----------
-        state: dictionary created by one of the functions which create 
-            states.
+        state: dictionary created by one of the functions which create states.
 
         Returns
         -------
         uid (integer) or None if the state is not in the variational space.
         '''
-        # Need to check if the state is in the vs, because after hopping
-        # the state can be outside of VS
+        # Need to check if the state is in the VS, because after hopping the state can be outside of VS
         if not self.check_in_vs(state):
             return None
         
@@ -312,10 +314,7 @@ class VariationalSpace:
 
     def get_state(self,uid):
         '''
-        Given a unique identifier, return the corresponding state. See 
-        get_uid.
-
-        must use the number of all possible orbitals !!!
+        Given a unique identifier, return the corresponding state. 
         ''' 
         N = pam.Norb
         s = self.Mc+1 # shift to make values positive
@@ -360,9 +359,7 @@ class VariationalSpace:
         Returns
         -------
         index: integer such that lookup_tbl[index] = get_uid(state,Mc).
-            If the state is not in the variational space None is 
-            returned.
-
+            If the state is not in the variational space None is returned.
         '''
         uid = self.get_uid(state)
         if uid == None:
