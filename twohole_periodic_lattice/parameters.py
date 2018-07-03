@@ -2,7 +2,7 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 30
+Mc = 40
 ed = 0
 ep = 3.5
 
@@ -35,14 +35,14 @@ kx = M_PI/2.
 ky = M_PI/2.
 kx = 0.
 ky = 0.
-eta = 0.02
+eta = 0.05
 
 w_start = -10.
 w_stop = 20.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
-if_project_out_two_holes_on_different_Cu = 0
+if_project_out_two_holes_on_different_Cu = 1
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0

@@ -506,16 +506,15 @@ def create_tpd_nn_matrix(phase,VS):
                     #    if (o1 in pam.Cu_orbs and orb2 in pam.Cu_orbs and (x1_shift,y1_shift)!=(x2_shift,y2_shift)):
                     #        continue
                                     
-                    tmp_state = vs.create_state(s1,o1,  x1_shift,y1_shift,\
-                                                s2,orb2,x2_shift,y2_shift)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
-                                    
-                    o12 = tuple([orb1, dir_, o1])
-                    
-                    # see make_state_canonical in variational_space.py for phasec 
-                    if o12 in tpd_orbs:
-                        set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpd_nn_hopping_factor[o12]*phase[(Rx_new,Ry_new)]*ph)
+                    if vs.check_in_vs_condition(x1_shift,y1_shift,x2_shift,y2_shift):
+                        tmp_state = vs.create_state(s1,o1,  x1_shift,y1_shift,\
+                                                    s2,orb2,x2_shift,y2_shift)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
+
+                        o12 = tuple([orb1, dir_, o1])
+                        if o12 in tpd_orbs:
+                            set_matrix_element(row,col,data,new_state,i,VS,\
+                                           tpd_nn_hopping_factor[o12]*phase[(Rx_new,Ry_new)]*ph)
 
         # hole 2 hops; some d-orbitals might have no tpd
         if if_tpd_nn_hopping[orb2] == 1:
@@ -537,13 +536,14 @@ def create_tpd_nn_matrix(phase,VS):
                     #    if (orb1 in pam.Cu_orbs and o2 in pam.Cu_orbs and (x1,y1)!=(x2_new,y2_new)):
                     #        continue
                             
-                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2_new,y2_new)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
-                        
-                    o12 = tuple([orb2, dir_, o2])
-                    if o12 in tpd_orbs:
-                        set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpd_nn_hopping_factor[o12]*ph)
+                    if vs.check_in_vs_condition(x1,y1,x2_new,y2_new):
+                        tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2_new,y2_new)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
+
+                        o12 = tuple([orb2, dir_, o2])
+                        if o12 in tpd_orbs:
+                            set_matrix_element(row,col,data,new_state,i,VS,\
+                                           tpd_nn_hopping_factor[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)
@@ -604,24 +604,16 @@ def create_tpp_nn_matrix(phase,VS):
                     #    if (o1 in pam.Cu_orbs and orb2 in pam.Cu_orbs and (x1_shift,y1_shift)!=(x2_shift,y2_shift)):
                     #        continue
                             
-                    tmp_state = vs.create_state(s1,o1,  x1_shift,y1_shift,\
-                                                s2,orb2,x2_shift,y2_shift)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
-                        
-                    o12 = sorted([orb1, dir_, o1])
-                    o12 = tuple(o12)
-                    set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpp_nn_hopping_factor[o12]*phase[(Rx_new,Ry_new)]*ph)
-                    
-                    # debug:
-                    #row_ind = VS.get_index(new_state)
-                    #if i==38 and row_ind==85:
-                    #    statei = VS.get_state(VS.lookup_tbl[i])
-                    #    print 'statei = ',i, statei
-                    #    statei = VS.get_state(VS.lookup_tbl[row_ind])
-                    #    print 'statei = ',row_ind,statei
-                    #    print 'phase = ', phase[(Rx_new,Ry_new)], ph, phase[(Rx_new,Ry_new)]*ph
+                    if vs.check_in_vs_condition(x1_shift,y1_shift,x2_shift,y2_shift):
+                        tmp_state = vs.create_state(s1,o1,  x1_shift,y1_shift,\
+                                                    s2,orb2,x2_shift,y2_shift)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
 
+                        o12 = sorted([orb1, dir_, o1])
+                        o12 = tuple(o12)
+                        set_matrix_element(row,col,data,new_state,i,VS,\
+                                           tpp_nn_hopping_factor[o12]*phase[(Rx_new,Ry_new)]*ph)
+                    
         # hole 2 hops, only p-orbitals has t_pp 
         if orb2 in pam.O_orbs:
             for dir_ in tpp_nn_hopping_directions:
@@ -641,13 +633,14 @@ def create_tpp_nn_matrix(phase,VS):
                     #    if (orb1 in pam.Cu_orbs and o2 in pam.Cu_orbs and (x1,y1)!=(x2_new,y2_new)):
                     #        continue
                             
-                    tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2_new,y2_new)
-                    new_state,ph = vs.make_state_canonical(tmp_state)
+                    if vs.check_in_vs_condition(x1,y1,x2_new,y2_new):
+                        tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2_new,y2_new)
+                        new_state,ph = vs.make_state_canonical(tmp_state)
 
-                    o12 = sorted([orb2, dir_, o2])
-                    o12 = tuple(o12)
-                    set_matrix_element(row,col,data,new_state,i,VS,\
-                                       tpp_nn_hopping_factor[o12]*ph)
+                        o12 = sorted([orb2, dir_, o2])
+                        o12 = tuple(o12)
+                        set_matrix_element(row,col,data,new_state,i,VS,\
+                                           tpp_nn_hopping_factor[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)

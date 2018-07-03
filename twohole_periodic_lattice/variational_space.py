@@ -28,6 +28,7 @@ def create_state(spin1,orb1,x1,y1,spin2,orb2,x2,y2):
     variational space because the hole-hole Manhattan distance
     exceeds Mc.
     '''
+    assert(check_in_vs_condition(x1,y1,x2,y2))
     assert not (((x1,y1))==(x2,y2) and spin1==spin2 and orb1==orb2)
     assert (x1,y1) in [(0,0),(1,0),(0,1)]
     orb, _, _ = lat.get_unit_cell_rep(x1,y1)
@@ -131,6 +132,15 @@ def calc_manhattan_dist(x1,y1,x2,y2):
     out = abs(x1-x2) + abs(y1-y2)
     return out
 
+def check_in_vs_condition(x1,y1,x2,y2):
+    '''
+    Restrictions: the distance between two holes should be less than cutoff Mc
+    '''     
+    if calc_manhattan_dist(x1,y1,x2,y2) > pam.Mc:
+        return False
+    else:
+        return True
+    
 class VariationalSpace:
     '''
     Distance (L1-norm) between any two particles must not exceed a
@@ -225,17 +235,14 @@ class VariationalSpace:
                                 
                                 #if s1=='dn' and s2=='dn':
                                 #    print "candiate state: ", s1,orb1,ux,uy,s2,orb2,vx,vy
-                                state = create_state(s1,orb1,ux,uy,s2,orb2,vx,vy)
-                                canonical_state,_ = make_state_canonical(state)
-                                ts1 = canonical_state['hole1_spin']
-                                ts2 = canonical_state['hole2_spin']
-                                torb1 = canonical_state['hole1_orb']
-                                torb2 = canonical_state['hole2_orb']
-                                tx1, ty1 = canonical_state['hole1_coord']
-                                tx2, ty2 = canonical_state['hole2_coord']
-                                #if pam.if_project_out_two_holes_on_different_Cu == 1:
-                                #    if torb1 in pam.Cu_orbs and torb2 in pam.Cu_orbs and (tx1, ty1)!=(tx2, ty2):
-                                #        continue
+                                
+                                if check_in_vs_condition(ux,uy,vx,vy):
+                                    state = create_state(s1,orb1,ux,uy,s2,orb2,vx,vy)
+                                    canonical_state,_ = make_state_canonical(state)
+
+                                    #if pam.if_project_out_two_holes_on_different_Cu == 1:
+                                    #    if torb1 in pam.Cu_orbs and torb2 in pam.Cu_orbs and (tx1, ty1)!=(tx2, ty2):
+                                    #        continue
 
                                 if self.filter_func(canonical_state):
                                     uid = self.get_uid(canonical_state)
@@ -262,13 +269,16 @@ class VariationalSpace:
         Boolean: True or False
         '''
         assert(self.filter_func(state) in [True,False])
-
         if self.filter_func(state) == False:
             return False
 
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
-        return calc_manhattan_dist(x1,y1,x2,y2) <= self.Mc
+  
+        if check_in_vs_condition(x1,y1,x2,y2):
+            return True
+        else:
+            return False
 
     def get_uid(self,state):
         '''
@@ -285,11 +295,10 @@ class VariationalSpace:
         -------
         uid (integer) or None if the state is not in the variational space.
         '''
-        N = pam.Norb 
-        
         if not self.check_in_vs(state):
             return None
 
+        N = pam.Norb 
         s = self.Mc+1 # shift to make values positive
         B1 = 2*self.Mc+4
 
@@ -326,7 +335,6 @@ class VariationalSpace:
         must use the number of all possible orbitals, namely N=7 !!!
         '''
         N = pam.Norb
-        
         s = self.Mc+1 # shift to make values positive
         B1 = 2*self.Mc+4
 

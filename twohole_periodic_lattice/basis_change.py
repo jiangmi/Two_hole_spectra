@@ -28,8 +28,8 @@ def count_VS(VS):
         elif s1=='dn' and s2=='dn':
             count_dndn += 1
 
-    print 'No. of states with count_upup, count_updn, count_dnup, count_dndn:'
-    print count_upup, count_updn, count_dnup, count_dndn
+    print 'No. of states with count_upup, count_updn, count_dnup, count_dndn:',\
+         count_upup, count_updn, count_dnup, count_dndn
     
     assert(count_upup==count_dndn)
     return count_upup, count_updn, count_dnup, count_dndn
