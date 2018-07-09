@@ -140,8 +140,8 @@ class LanczosSolver:
 
             #Now diagonalize the tridiagonal symmetric matrix defined
             if (self.cond == 'PRECISION' or j == self.maxiter) and mode == 'FIRST':
-		if j == self.maxiter and self.cond == 'PRECISION':
-			logging.warning("Warning: Max number of iterations reached")
+                if j == self.maxiter and self.cond == 'PRECISION':
+                    logging.warning("Warning: Max number of iterations reached")
                 if j > 0:
                     gse_old = gse_new
 

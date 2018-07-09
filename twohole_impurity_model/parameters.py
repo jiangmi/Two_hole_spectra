@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 20
+Mc = 15
 ed = 0
-ep = 3.5
+ep = 2.5
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -19,7 +19,7 @@ ep = 3.5
 Norb = 7
 if Norb==3 or Norb==7:
     #tpd_tpp_set = [(1.3, 0.00001),(1.3, 0.00001)]
-    tpd = 1.3
+    tpd = 0.2
     tpp = 0.6
 elif Norb==9:
     pds = 1.5
@@ -31,12 +31,13 @@ elif Norb==9:
     #pps = 0.00001
     #ppp = 0.00001
 
-eta = 0.05
-w_start = -10.
-w_stop = 20.
+eta = 0.01
+w_start = -2.
+w_stop = 8.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
+if_get_ground_state = 0
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
@@ -68,9 +69,9 @@ assert(len(orbs)==Norb)
 # Below for interaction matrix
 Upp = 0
 if Norb==3:
-    Udd = 0 #8.84  # A+4*B+3*C
+    Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['1A1','1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
+    symmetries = ['1A1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
     print "symmetries = ",symmetries
     A = 6.5
     B = 0.15

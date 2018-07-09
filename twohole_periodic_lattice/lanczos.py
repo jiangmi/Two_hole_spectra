@@ -1,12 +1,17 @@
 ## @package Lanczos This package is a very simple and straight-forward implementation of the
 # Lanczos algorithm for sparse matrices.
 #
-# Usage: Create a LanczosSolver object with the desired properties (max. number of
+# Usage
+# =====
+# Create a LanczosSolver object with the desired properties (max. number of
 # iterations, desired precision, invariant subspace detection threshold etc).
+#                                                           
+# 1. if compute ground state energy and eigenvector:
+# Call the 'lanczos' with randomly initialized for x0 
 #
-# Then either call the 'lanczos' method to compute ground state energy and ground
-# state vector, or call the first lanczos pass individually and then explicitly
-# diagonalize the resulting matrix to obtain spectral weights.'''
+# 2. if computing spectral function:
+# use desired state as x0 and call first_pass and 
+# then call lanczos_diag_T for the resulting tridiagnonal matrix to obtain spectral weights
 
 import numpy as np
 import numpy.linalg as linalg
@@ -140,8 +145,8 @@ class LanczosSolver:
 
             #Now diagonalize the tridiagonal symmetric matrix defined
             if (self.cond == 'PRECISION' or j == self.maxiter) and mode == 'FIRST':
-		if j == self.maxiter and self.cond == 'PRECISION':
-			logging.warning("Warning: Max number of iterations reached")
+                if j == self.maxiter and self.cond == 'PRECISION':
+                    logging.warning("Warning: Max number of iterations reached")
                 if j > 0:
                     gse_old = gse_new
 

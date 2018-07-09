@@ -2,7 +2,7 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 40
+Mc = 30
 ed = 0
 ep = 3.5
 
@@ -33,16 +33,20 @@ elif Norb==9:
 
 kx = M_PI/2.
 ky = M_PI/2.
-kx = 0.
-ky = 0.
-eta = 0.05
+#kx = 0.
+#ky = 0.
+eta = 0.001
 
-w_start = -10.
-w_stop = 20.
+# only used for 1A1_lowest_peak_dispersion.ipynb
+# then the above kx,ky are neglected
+Nk = 5
+
+w_start = -1.
+w_stop = 1.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
-if_project_out_two_holes_on_different_Cu = 1
+if_project_out_two_holes_on_different_Cu = 0
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
@@ -74,9 +78,9 @@ assert(len(orbs)==Norb)
 # Below for interaction matrix
 Upp = 0
 if Norb==3:
-    Udd = 0 #8.84  # A+4*B+3*C
+    Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['1A1','1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
+    symmetries = ['1A1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
     print "symmetries = ",symmetries
     A = 6.5
     B = 0.15
