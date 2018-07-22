@@ -57,20 +57,12 @@ def find_singlet_triplet_partner(state,VS):
     x1, y1 = state['hole1_coord']
     x2, y2 = state['hole2_coord']
     
-    # only applies to general opposite-spin state, not nesessarily in d_double
-    assert(s1!=s2)
-
-    if (x1,y1)==(x2,y2):
-        # same site states cannot be s1='dn' and s2='up', see make_state_canonical in VS
-        partner_state = vs.create_state('up',orb2,x2,y2,'dn',orb1,x1,y1)
-        phase = -1.0
-    else:
-        partner_state = vs.create_state(s2,orb1,x1,y1,s1,orb2,x2,y2)
-        phase = 1.0
+    tmp_state = vs.create_state(s2,orb1,x1,y1,s1,orb2,x2,y2)
+    partner_state, phase = vs.make_state_canonical(tmp_state)
         
     return VS.get_index(partner_state), phase
 
-def create_singlet_triplet_basis_change_matrix(VS,d_double):
+def create_singlet_triplet_basis_change_matrix(VS):
     '''
     Create a matrix representing the basis change to singlets/triplets. The
     columns of the output matrix are the new basis vectors. 
@@ -97,9 +89,8 @@ def create_singlet_triplet_basis_change_matrix(VS,d_double):
     
     count_singlet = 0
     count_triplet = 0
-    indices = range(0,VS.dim)
     
-    # store index of partner state in d_double to avoid double counting
+    # store index of partner state to avoid double counting
     # otherwise, when arriving at i's partner j, its partner would be i
     count_list = []
     
@@ -107,58 +98,54 @@ def create_singlet_triplet_basis_change_matrix(VS,d_double):
     S_val  = np.zeros(VS.dim, dtype=int)
     Sz_val = np.zeros(VS.dim, dtype=int)
     
-    for i in indices:
+    for i in range(0,VS.dim):
         start_state = VS.get_state(VS.lookup_tbl[i])
         s1 = start_state['hole1_spin']
         s2 = start_state['hole2_spin']
         orb1 = start_state['hole1_orb']
         orb2 = start_state['hole2_orb']
 
-        if s1 == s2:
-            # must be triplet
-            # see case 2 of make_state_canonical in vs.py , namely
-            # for same spin states, always order the orbitals
-            S_val[i] = 1
-            data.append(np.sqrt(2.0));  row.append(i); col.append(i)
-            if s1=='up':
-                Sz_val[i] = 2
-            elif s1=='dn':
-                Sz_val[i] = 0
-            count_triplet += 1
-            
-        # in d_double, there is no states with s1='dn' and s2='up'
-        elif s1=='up' and s2=='dn':
-            if orb1==orb2:
+        if i not in count_list:
+            j, ph = find_singlet_triplet_partner(start_state,VS)
+            count_list.append(j)
+                
+            if j==i:
                 data.append(np.sqrt(2.0));  row.append(i); col.append(i)
-                S_val[i]  = 0
-                Sz_val[i] = 1
-                count_singlet += 1
-            else:
-                if i not in count_list:
-                    j, ph = find_singlet_triplet_partner(start_state,VS)
-
-                    # append matrix elements for singlet states
-                    # convention: original state col i stores singlet and 
-                    #             partner state col j stores triplet
-                    data.append(1.0);  row.append(i); col.append(i)
-                    data.append(ph);   row.append(j); col.append(i)
+                if s1==s2:
+                    # must be triplet
+                    S_val[i] = 1
+                    if s1=='up':
+                        Sz_val[i] = 2
+                    elif s1=='dn':
+                        Sz_val[i] = 0
+                    count_triplet += 1
+                else:
+                    # only possible other states for j=i 
+                    assert(s1=='up' and s2=='dn' and orb1==orb2)
                     S_val[i]  = 0
                     Sz_val[i] = 1
-
-                    #print "partner states:", i,j
-                    #print "state i = ", s1, orb1, s2, orb2
-                    #print "state j = ",'up',orb2,'dn',orb1
-
-                    # append matrix elements for triplet states
-                    data.append(1.0);  row.append(i); col.append(j)
-                    data.append(-ph);  row.append(j); col.append(j)
-                    S_val[j]  = 1
-                    Sz_val[j] = 1
-
-                    count_list.append(j)
-
                     count_singlet += 1
-                    count_triplet += 1
+            else:
+                # append matrix elements for singlet states
+                # convention: original state col i stores singlet and 
+                #             partner state col j stores triplet
+                data.append(1.0);  row.append(i); col.append(i)
+                data.append(-ph);   row.append(j); col.append(i)
+                S_val[i]  = 0
+                Sz_val[i] = 1
+
+                #print "partner states:", i,j
+                #print "state i = ", s1, orb1, s2, orb2
+                #print "state j = ",'up',orb2,'dn',orb1
+
+                # append matrix elements for triplet states
+                data.append(1.0);  row.append(i); col.append(j)
+                data.append(ph);  row.append(j); col.append(j)
+                S_val[j]  = 1
+                Sz_val[j] = 1
+
+                count_singlet += 1
+                count_triplet += 1
 
     return sps.coo_matrix((data,(row,col)),shape=(VS.dim,VS.dim))/np.sqrt(2.0), S_val, Sz_val
 
@@ -199,7 +186,6 @@ def create_singlet_triplet_basis_change_matrix_d_double(VS,d_double):
     
     count_singlet = 0
     count_triplet = 0
-    indices = range(0,VS.dim)
     
     # store index of partner state in d_double to avoid double counting
     # otherwise, when arriving at i's partner j, its partner would be i
@@ -210,7 +196,7 @@ def create_singlet_triplet_basis_change_matrix_d_double(VS,d_double):
     Sz_val = np.zeros(VS.dim, dtype=int)
     
     # first set the matrix to be identity matrix (for states not d_double)
-    for i in indices:
+    for i in range(0,VS.dim):
         if i not in d_double:
             data.append(np.sqrt(2.0)); row.append(i); col.append(i)
         

@@ -2,7 +2,7 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 30
+Mc = 160
 ed = 0
 ep = 3.5
 
@@ -16,7 +16,7 @@ ep = 3.5
 
 # IMPORTANT: keep all hoppings below positive to avoid confusion
 #            hopping signs are considered in dispersion separately
-Norb = 7
+Norb = 3
 if Norb==3 or Norb==7:
     #tpd_tpp_set = [(1.3, 0.00001),(1.3, 0.00001)]
     tpd = 1.3
@@ -33,24 +33,25 @@ elif Norb==9:
 
 kx = M_PI/2.
 ky = M_PI/2.
-#kx = 0.
-#ky = 0.
-eta = 0.001
+kx = 0.
+ky = 0.
+eta = 0.05
 
 # only used for 1A1_lowest_peak_dispersion.ipynb
 # then the above kx,ky are neglected
-Nk = 5
+Nk = 4
 
-w_start = -1.
-w_stop = 1.
+w_start = -4.
+w_stop = 3.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
+if_get_ground_state = 0
 if_project_out_two_holes_on_different_Cu = 0
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
-if_compute_Aw_Cu_O_dx2y2 = 0
+if_compute_Aw_Cu_dx2y2_O = 0
 
 if Norb==3:
     Cu_orbs = ['dx2y2']

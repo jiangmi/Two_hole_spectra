@@ -222,8 +222,8 @@ class VariationalSpace:
                         for orb2 in orb2s:
                             for s2 in ['up','dn']:   
                                 # try screen out same spin states
-                                if s1==s2:
-                                    continue
+                                #if s1==s2:
+                                #    continue
                                 
                                 # consider Pauli principle
                                 if s1==s2 and orb1==orb2 and ux==vx and uy==vy:

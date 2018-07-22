@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 15
+Mc = 20
 ed = 0
-ep = 2.5
+ep = 3.5
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -18,8 +18,7 @@ ep = 2.5
 #            hopping signs are considered in dispersion separately
 Norb = 7
 if Norb==3 or Norb==7:
-    #tpd_tpp_set = [(1.3, 0.00001),(1.3, 0.00001)]
-    tpd = 0.2
+    tpd = 1.3
     tpp = 0.6
 elif Norb==9:
     pds = 1.5
@@ -31,17 +30,17 @@ elif Norb==9:
     #pps = 0.00001
     #ppp = 0.00001
 
-eta = 0.01
-w_start = -2.
-w_stop = 8.
+eta = 0.001
+w_start = -4.
+w_stop = 3.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
-if_get_ground_state = 0
+if_get_ground_state = 1
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
-if_compute_Aw_Cu_O_dx2y2 = 0
+if_compute_Aw_Cu_dx2y2_O = 0
 
 if Norb==3:
     Cu_orbs = ['dx2y2']
@@ -71,7 +70,7 @@ Upp = 0
 if Norb==3:
     Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['1A1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
+    symmetries = ['1A1','1B1','3B1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
     print "symmetries = ",symmetries
     A = 6.5
     B = 0.15

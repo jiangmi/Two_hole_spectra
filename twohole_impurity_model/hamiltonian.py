@@ -709,31 +709,36 @@ def get_dp_state_indices(VS):
     
     return dp_state_indices
 
-def get_Cu_O_dx2y2_indices(VS):
+def get_Cu_dx2y2_O_indices(VS):
     '''
     Get the list of index for states with one hole on Cu and the other on neighboring O 
     with dx2-y2 symmetry (1/sqrt(4)) * (px1-py2-px3+py4)
     '''   
     dim = VS.dim
-    Cu_O_dx2y2_indices = []
+    Cu_dx2y2_O_indices = []
     
     state = vs.create_state('up','dx2y2',0,0,'dn','px',1,0)
     canonical_state,_ = vs.make_state_canonical(state)
-    Cu_O_dx2y2_indices.append(VS.get_index(canonical_state))
+    idx = VS.get_index(canonical_state)
+    Cu_dx2y2_O_indices.append(idx)
+    print "Cu_dx2y2_O_indices", idx
     
     state = vs.create_state('up','dx2y2',0,0,'dn','py',0,1)
     canonical_state,_ = vs.make_state_canonical(state)
-    Cu_O_dx2y2_indices.append(VS.get_index(canonical_state))
+    idx = VS.get_index(canonical_state)
+    Cu_dx2y2_O_indices.append(idx)
+    print "Cu_dx2y2_O_indices", idx
     
+    '''
     state = vs.create_state('up','dx2y2',0,0,'dn','px',-1,0)
     canonical_state,_ = vs.make_state_canonical(state)
-    Cu_O_dx2y2_indices.append(VS.get_index(canonical_state))
+    Cu_dx2y2_O_indices.append(VS.get_index(canonical_state))
     
     state = vs.create_state('up','dx2y2',0,0,'dn','py',0,-1)
     canonical_state,_ = vs.make_state_canonical(state)
-    Cu_O_dx2y2_indices.append(VS.get_index(canonical_state))
-    
-    return Cu_O_dx2y2_indices
+    Cu_dx2y2_O_indices.append(VS.get_index(canonical_state))
+    '''
+    return Cu_dx2y2_O_indices
 
 def check_dense_matrix_hermitian(matrix):
     '''
