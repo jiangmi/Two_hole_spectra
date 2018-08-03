@@ -31,8 +31,8 @@ elif Norb==9:
     #pps = 0.00001
     #ppp = 0.00001
 
-kx = M_PI/2.
-ky = M_PI/2.
+kx = M_PI#/2.
+ky = M_PI#/2.
 kx = 0.
 ky = 0.
 eta = 0.05

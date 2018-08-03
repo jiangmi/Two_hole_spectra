@@ -170,9 +170,8 @@ class VariationalSpace:
             torb2 = state['hole2_orb']
             tx1, ty1 = state['hole1_coord']
             tx2, ty2 = state['hole2_coord']
-            #if ts1=='up' and ts2=='dn':
-            if i==12 or i==17:
-                print i, ts1,torb1,tx1,ty1,ts2,torb2,tx2,ty2
+            #if ts1=='up' and ts2=='up':
+            print i, ts1,torb1,tx1,ty1,ts2,torb2,tx2,ty2
                 
     def create_lookup_tbl(self):
         '''

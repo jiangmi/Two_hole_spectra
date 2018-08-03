@@ -107,6 +107,7 @@ def create_singlet_triplet_basis_change_matrix(VS):
 
         if i not in count_list:
             j, ph = find_singlet_triplet_partner(start_state,VS)
+            #print i,' partner state is ',j
             count_list.append(j)
                 
             if j==i:

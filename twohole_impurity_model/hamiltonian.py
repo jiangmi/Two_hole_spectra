@@ -64,19 +64,20 @@ if pam.Norb==3:
                              ('py','U','dx2y2'):  -tpd}
 elif pam.Norb==7:
     tpd = pam.tpd
-    tpd_nn_hopping_factor = {('d3z2r2','L','px'):  tpd/np.sqrt(3),\
-                             ('d3z2r2','R','px'): -tpd/np.sqrt(3),\
-                             ('d3z2r2','U','py'): -tpd/np.sqrt(3),\
-                             ('d3z2r2','D','py'):  tpd/np.sqrt(3),\
+    # d3z2r2 has +,-,+ sign structure so that it is negative in x-y plane
+    tpd_nn_hopping_factor = {('d3z2r2','L','px'): -tpd/np.sqrt(3),\
+                             ('d3z2r2','R','px'):  tpd/np.sqrt(3),\
+                             ('d3z2r2','U','py'):  tpd/np.sqrt(3),\
+                             ('d3z2r2','D','py'): -tpd/np.sqrt(3),\
                              ('dx2y2','L','px'):   tpd,\
                              ('dx2y2','R','px'):  -tpd,\
                              ('dx2y2','U','py'):   tpd,\
                              ('dx2y2','D','py'):  -tpd,\
                              # below just inverse dir of the above one by one
-                             ('px','R','d3z2r2'):  tpd/np.sqrt(3),\
-                             ('px','L','d3z2r2'): -tpd/np.sqrt(3),\
-                             ('py','D','d3z2r2'): -tpd/np.sqrt(3),\
-                             ('py','U','d3z2r2'):  tpd/np.sqrt(3),\
+                             ('px','R','d3z2r2'): -tpd/np.sqrt(3),\
+                             ('px','L','d3z2r2'):  tpd/np.sqrt(3),\
+                             ('py','D','d3z2r2'):  tpd/np.sqrt(3),\
+                             ('py','U','d3z2r2'): -tpd/np.sqrt(3),\
                              ('px','R','dx2y2'):   tpd,\
                              ('px','L','dx2y2'):  -tpd,\
                              ('py','D','dx2y2'):   tpd,\
@@ -168,6 +169,22 @@ def get_interaction_mat(sym):
     B = pam.B
     C = pam.C
     
+    if sym=='1AB1':
+        fac = np.sqrt(6)
+        Stot = 0
+        Sz_set = [1]
+        state_order = {('d3z2r2','d3z2r2'): 0,\
+                       ('dx2y2','dx2y2')  : 1,\
+                       ('dxy','dxy')      : 2,\
+                       ('dxz','dxz')      : 3,\
+                       ('dyz','dyz')      : 4,\
+                       ('d3z2r2','dx2y2') : 5}
+        interaction_mat = [[A+4.*B+3.*C,  4.*B+C,       4.*B+C,           B+C,           B+C,       0], \
+                           [4.*B+C,       A+4.*B+3.*C,  C,             3.*B+C,        3.*B+C,       0], \
+                           [4.*B+C,       C,            A+4.*B+3.*C,   3.*B+C,        3.*B+C,       0], \
+                           [B+C,          3.*B+C,       3.*B+C,        A+4.*B+3.*C,   3.*B+C,       B*fac], \
+                           [B+C,          3.*B+C,       3.*B+C,        3.*B+C,        A+4.*B+3.*C, -B*fac], \
+                           [0,            0,            0,              B*fac,         -B*fac,      A+2.*C]]
     if sym=='1A1':
         Stot = 0
         Sz_set = [1]
@@ -181,18 +198,6 @@ def get_interaction_mat(sym):
                            [4.*B+C,       C,            A+4.*B+3.*C,   -(3.*B+C),     -(3.*B+C)], \
                            [-(B+C),      -(3.*B+C),    -(3.*B+C),       A+4.*B+3.*C,   3.*B+C], \
                            [-(B+C),      -(3.*B+C),    -(3.*B+C),       3.*B+C,        A+4.*B+3.*C]]
-    if sym=='1A2':
-        Stot = 0
-        Sz_set = [1]
-        state_order = {('dx2y2','dxy'): 0}
-        interaction_mat = [[A+4.*B+2.*C]]
-    if sym=='3A2':
-        Stot = 1
-        Sz_set = [0,1,2]
-        state_order = {('dx2y2','dxy'): 0,\
-                       ('dxz','dyz')  : 1}
-        interaction_mat = [[A+4.*B,   -6.*B], \
-                           [-6.*B,     A-5.*B]]
     if sym=='1B1':
         Stot = 0
         Sz_set = [1]
@@ -203,6 +208,18 @@ def get_interaction_mat(sym):
         interaction_mat = [[A+2.*C,    B*fac,        -B*fac], \
                            [B*fac,     A+4.*B+3.*C,  3.*B+C], \
                            [-B*fac,    3.*B+C,       A+4.*B+3.*C]]
+    if sym=='1A2':
+        Stot = 0
+        Sz_set = [1]
+        state_order = {('dx2y2','dxy'): 0}
+        interaction_mat = [[A+4.*B+2.*C]]
+    if sym=='3A2':
+        Stot = 1
+        Sz_set = [0,1,2]
+        state_order = {('dx2y2','dxy'): 0,\
+                       ('dxz','dyz')  : 1}
+        interaction_mat = [[A+4.*B,   6.*B], \
+                           [6.*B,     A-5.*B]]
     if sym=='3B1':
         Stot = 1
         Sz_set = [0,1,2]
@@ -237,7 +254,6 @@ def get_interaction_mat(sym):
                            [0,            B*fac,        0,          A+B+2.*C,   3.*B,      0 ], \
                            [0,           -B*fac,        0,          3.*B,       A+B+2.*C,  0], \
                            [-B*fac,       0,           -3.*B,       0,          0,         A+B+2.*C]]
-
     if sym=='3E':
         Stot = 1
         Sz_set = [0,1,2]
@@ -474,12 +490,14 @@ def create_edep_diag_matrix(VS):
         orb1 = state['hole1_orb']
         orb2 = state['hole2_orb']
 
-        if orb1 in pam.O_orbs: 
-            diag_el = 1.
-        else:
-            diag_el = 0
-        if orb2 in pam.O_orbs: 
-            diag_el += 1.
+        if orb1 in pam.Cu_orbs: 
+            diag_el += pam.ed
+        elif orb1 in pam.O_orbs:
+            diag_el += pam.ep
+        if orb2 in pam.Cu_orbs: 
+            diag_el += pam.ed
+        elif orb2 in pam.O_orbs:
+            diag_el += pam.ep
 
         data.append(diag_el); row.append(i); col.append(i)
 
@@ -593,7 +611,7 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val):
                 if o34 in sym_orbs and S34==S12 and Sz34==Sz12:
                     idx2 = state_order[o34]
 
-                    #print S12,Sz12,o1,o2," ",S34,Sz34,o3,o4," ", interaction_mat[idx1][idx2]
+                    #print o12[0],o12[1],S12,Sz12," ",o34[0],o34[1],S34,Sz34," ", interaction_mat[idx1][idx2]
                     #print idx1, idx2
 
                     val = interaction_mat[idx1][idx2]
@@ -603,6 +621,93 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val):
             # Note: for transformed basis of singlet/triplet
             # index can differ from that in original basis
             if 'dx2y2' in o12:
+                dd_state_indices.append(i)
+                print "dd_state_indices", i, ", state: S= ", S12, " Sz= ", Sz12, "orb= ", o1,o2
+                 
+    # Create Upp matrix for p-orbital multiplets
+    for i in p_double:
+        data.append(pam.Upp); row.append(i); col.append(i)
+
+    row = np.array(row)
+    col = np.array(col)
+    data = np.array(data)
+    
+    # check if hoppings occur within groups of (up,up), (dn,dn), and (up,dn) 
+    assert(check_spin_group(row,col,data,VS)==True)
+    out = sps.coo_matrix((data,(row,col)),shape=(dim,dim))
+
+    return out, dd_state_indices
+
+def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val):
+    '''
+    Create Coulomb-exchange interaction matrix of d-multiplets including all symmetries
+    
+    Loop over all d_double states, find the corresponding sym channel; 
+    the other loop over all d_double states, if it has same sym channel and S, Sz
+    enter into the matrix element
+    '''    
+    #print "start create_interaction_matrix"
+    
+    Norb = pam.Norb
+    dim = VS.dim
+    data = []
+    row = []
+    col = []
+    dd_state_indices = []
+    
+    channels = ['1AB1','1A2','3A2','3B1','1B2','3B2','1E','3E']
+
+    for i in d_double:
+        # state is original state but its orbital info remains after basis change
+        state = VS.get_state(VS.lookup_tbl[i])
+        o1 = state['hole1_orb']
+        o2 = state['hole2_orb']
+        o12 = sorted([o1,o2])
+        o12 = tuple(o12)
+
+        # S_val, Sz_val obtained from basis.create_singlet_triplet_basis_change_matrix
+        S12  = S_val[i]
+        Sz12 = Sz_val[i]
+
+        # find the correpsonding sym
+        for sym in channels:
+            state_order, interaction_mat, Stot, Sz_set = get_interaction_mat(sym)
+            sym_orbs = state_order.keys()
+
+            # continue only if (o1,o2) and S, Sz are within desired sym
+            if o12 not in sym_orbs or S12!=Stot or Sz12 not in Sz_set:
+                continue
+                
+            #print 'state i', o12, ' belongs to sym ', sym
+                
+            # get the corresponding index in sym for setting up matrix element
+            idx1 = state_order[o12]
+            
+            for j in d_double:
+                state = VS.get_state(VS.lookup_tbl[j])
+                o3 = state['hole1_orb']
+                o4 = state['hole2_orb']
+                o34 = sorted([o3,o4])
+                o34 = tuple(o34)
+                S34  = S_val[j]
+                Sz34 = Sz_val[j]
+
+                # only same total spin S and Sz state have nonzero matrix element
+                if o34 not in sym_orbs or S34!=S12 or Sz34!=Sz12:
+                    continue
+
+                idx2 = state_order[o34]
+
+                #print o12[0],o12[1],S12,Sz12," ",o34[0],o34[1],S34,Sz34," ", interaction_mat[idx1][idx2]
+                #print idx1, idx2
+
+                val = interaction_mat[idx1][idx2]
+                data.append(val); row.append(i); col.append(j)
+
+            # get index for desired dd states
+            # Note: for transformed basis of singlet/triplet
+            # index can differ from that in original basis
+            if 'dx2y2' in o12 and 'd3z2r2' not in o12:
                 dd_state_indices.append(i)
                 print "dd_state_indices", i, ", state: S= ", S12, " Sz= ", Sz12, "orb= ", o1,o2
                  
@@ -681,7 +786,7 @@ def get_pp_state_indices(VS):
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
 
-        if o1 in pam.O_orbs and o2 in pam.O_orbs:
+        if o1 in pam.O_orbs and o2 in pam.O_orbs and (x1,y1)==(0,1) and (x2,y2)==(1,0):
             pp_state_indices.append(i)
             print "pp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
     
@@ -703,9 +808,9 @@ def get_dp_state_indices(VS):
         x1, y1 = state['hole1_coord']
         x2, y2 = state['hole2_coord']
             
-        if o1 in pam.Cu_orbs and o2 in pam.O_orbs and (x1,y1)==(0,0):
+        if o1 in pam.Cu_orbs and o2 in pam.O_orbs and (x1,y1)==(0,0) and (x2,y2)==(1,0):
             dp_state_indices.append(i)
-            print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
+            #print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
     
     return dp_state_indices
 
