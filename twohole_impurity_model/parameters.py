@@ -2,7 +2,7 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 1
+Mc = 12
 ed = 0
 ep = 3.5
 
@@ -16,7 +16,7 @@ ep = 3.5
 
 # IMPORTANT: keep all hoppings below positive to avoid confusion
 #            hopping signs are considered in dispersion separately
-Norb = 9
+Norb = 7
 if Norb==3 or Norb==7:
     tpd = 1.3
     tpp = 0.6
@@ -30,13 +30,14 @@ elif Norb==9:
     #pps = 0.00001
     #ppp = 0.00001
 
-eta = 0.01
-w_start = -7.
-w_stop = 2.
+eta = 0.08
+w_start = -5.
+w_stop = 20.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
-if_get_ground_state = 1
+basis_change_type = 'all_states' # 'all_states' or 'd_double'
+if_get_ground_state = 0
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
@@ -70,8 +71,7 @@ Upp = 0
 if Norb==3:
     Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['ALL']#,'1A1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
-    #symmetries = ['3E','3B1','3A2','1E','1B1','1A2','1A1']
+    symmetries = ['1A1','1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
     print "symmetries = ",symmetries
     A = 6.5
     B = 0.15
