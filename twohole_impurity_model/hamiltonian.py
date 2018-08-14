@@ -9,135 +9,6 @@ import variational_space as vs
 import numpy as np
 import scipy.sparse as sps
 
-# dxz and dyz has no tpd hopping
-if pam.Norb==3:
-    tpd_nn_hopping_directions = {'dx2y2' : ['L','R','U','D'],\
-                                 'px'    : ['L','R'],\
-                                 'py'    : ['U','D']}
-elif pam.Norb==7:
-    tpd_nn_hopping_directions = {'d3z2r2': ['L','R','U','D'],\
-                                 'dx2y2' : ['L','R','U','D'],\
-                                 'px'    : ['L','R'],\
-                                 'py'    : ['U','D']}
-elif pam.Norb==9:
-    tpd_nn_hopping_directions = {'d3z2r2': ['L','R','U','D'],\
-                                 'dx2y2' : ['L','R','U','D'],\
-                                 'dxy'   : ['L','R','U','D'],\
-                                 'px1'   : ['L','R'],\
-                                 'py1'   : ['L','R'],\
-                                 'px2'   : ['U','D'],\
-                                 'py2'   : ['U','D']}
-if pam.Norb==3:
-    if_tpd_nn_hopping = {'dx2y2' : 1,\
-                         'px'    : 1,\
-                         'py'    : 1}
-elif pam.Norb==7:
-    if_tpd_nn_hopping = {'d3z2r2': 1,\
-                         'dx2y2' : 1,\
-                         'dxy'   : 0,\
-                         'dxz'   : 0,\
-                         'dyz'   : 0,\
-                         'px'    : 1,\
-                         'py'    : 1}
-elif pam.Norb==9:
-    if_tpd_nn_hopping = {'d3z2r2': 1,\
-                         'dx2y2' : 1,\
-                         'dxy'   : 1,\
-                         'dxz'   : 0,\
-                         'dyz'   : 0,\
-                         'px1'   : 1,\
-                         'py1'   : 1,\
-                         'px2'   : 1,\
-                         'py2'   : 1}
-# hole language: sign convention followed from Fig 1 in H.Eskes's PRB 1990 paper
-#                or PRB 2016: Characterizing the three-orbital Hubbard model...
-if pam.Norb==3:
-    tpd = pam.tpd
-    tpd_nn_hopping_factor = {('dx2y2','L','px'):   tpd,\
-                             ('dx2y2','R','px'):  -tpd,\
-                             ('dx2y2','U','py'):   tpd,\
-                             ('dx2y2','D','py'):  -tpd,\
-                             # below just inverse dir of the above one by one
-                             ('px','R','dx2y2'):   tpd,\
-                             ('px','L','dx2y2'):  -tpd,\
-                             ('py','D','dx2y2'):   tpd,\
-                             ('py','U','dx2y2'):  -tpd}
-elif pam.Norb==7:
-    tpd = pam.tpd
-    # d3z2r2 has +,-,+ sign structure so that it is negative in x-y plane
-    tpd_nn_hopping_factor = {('d3z2r2','L','px'): -tpd/np.sqrt(3),\
-                             ('d3z2r2','R','px'):  tpd/np.sqrt(3),\
-                             ('d3z2r2','U','py'):  tpd/np.sqrt(3),\
-                             ('d3z2r2','D','py'): -tpd/np.sqrt(3),\
-                             ('dx2y2','L','px'):   tpd,\
-                             ('dx2y2','R','px'):  -tpd,\
-                             ('dx2y2','U','py'):   tpd,\
-                             ('dx2y2','D','py'):  -tpd,\
-                             # below just inverse dir of the above one by one
-                             ('px','R','d3z2r2'): -tpd/np.sqrt(3),\
-                             ('px','L','d3z2r2'):  tpd/np.sqrt(3),\
-                             ('py','D','d3z2r2'):  tpd/np.sqrt(3),\
-                             ('py','U','d3z2r2'): -tpd/np.sqrt(3),\
-                             ('px','R','dx2y2'):   tpd,\
-                             ('px','L','dx2y2'):  -tpd,\
-                             ('py','D','dx2y2'):   tpd,\
-                             ('py','U','dx2y2'):  -tpd}
-elif pam.Norb==9:
-    pds = pam.pds
-    pdp = pam.pdp
-    c = np.sqrt(3)/2.0
-    tpd_nn_hopping_factor = {('d3z2r2','L','px1'):  pds/2.0,\
-                             ('d3z2r2','R','px1'): -pds/2.0,\
-                             ('d3z2r2','U','py2'): -pds/2.0,\
-                             ('d3z2r2','D','py2'):  pds/2.0,\
-                             ('dx2y2','L','px1'):   pds*c,\
-                             ('dx2y2','R','px1'):  -pds*c,\
-                             ('dx2y2','U','py2'):   pds*c,\
-                             ('dx2y2','D','py2'):  -pds*c,\
-                             ('dxy','L','py1'):  -pdp,\
-                             ('dxy','R','py1'):   pdp,\
-                             ('dxy','U','px2'):   pdp,\
-                             ('dxy','D','px2'):  -pdp,\
-                             # below just inverse dir of the above one by one
-                             ('px1','R','d3z2r2'):  pds/2.0,\
-                             ('px1','L','d3z2r2'): -pds/2.0,\
-                             ('py2','D','d3z2r2'): -pds/2.0,\
-                             ('py2','U','d3z2r2'):  pds/2.0,\
-                             ('px1','R','dx2y2'):   pds*c,\
-                             ('px1','L','dx2y2'):  -pds*c,\
-                             ('py2','D','dx2y2'):   pds*c,\
-                             ('py2','U','dx2y2'):  -pds*c,\
-                             ('py1','R','dxy'):  -pdp,\
-                             ('py1','L','dxy'):   pdp,\
-                             ('px2','D','dxy'):   pdp,\
-                             ('px2','U','dxy'):  -pdp}
-########################## tpp below ##############################
-tpp_nn_hopping_directions = ['UR','UL','DL','DR']
-if pam.Norb==3 or pam.Norb==7:
-    tpp = pam.tpp
-    tpp_nn_hopping_factor = {('UR','px','py'): -tpp,\
-                             ('UL','px','py'):  tpp,\
-                             ('DL','px','py'): -tpp,\
-                             ('DR','px','py'):  tpp}
-elif pam.Norb==9:
-    pps = pam.pps
-    ppp = pam.ppp
-    tpp_nn_hopping_factor = {('UR','px1','px2'):  0.5*(ppp-pps),\
-                             ('UL','px1','px2'):  0.5*(ppp-pps),\
-                             ('DL','px1','px2'):  0.5*(ppp-pps),\
-                             ('DR','px1','px2'):  0.5*(ppp-pps),\
-                             ('UR','py1','py2'):  0.5*(ppp-pps),\
-                             ('UL','py1','py2'):  0.5*(ppp-pps),\
-                             ('DL','py1','py2'):  0.5*(ppp-pps),\
-                             ('DR','py1','py2'):  0.5*(ppp-pps),\
-                             ('UR','px1','py2'): -0.5*(ppp+pps),\
-                             ('UL','px1','py2'):  0.5*(ppp+pps),\
-                             ('DL','px1','py2'): -0.5*(ppp+pps),\
-                             ('DR','px1','py2'):  0.5*(ppp+pps),\
-                             ('UR','px2','py1'): -0.5*(ppp+pps),\
-                             ('UL','px2','py1'):  0.5*(ppp+pps),\
-                             ('DL','px2','py1'): -0.5*(ppp+pps),\
-                             ('DR','px2','py1'):  0.5*(ppp+pps)}
 directions_to_vecs = {'UR': (1,1),\
                       'UL': (-1,1),\
                       'DL': (-1,-1),\
@@ -146,6 +17,132 @@ directions_to_vecs = {'UR': (1,1),\
                       'R': (1,0),\
                       'U': (0,1),\
                       'D': (0,-1)}
+tpp_nn_hop_dir = ['UR','UL','DL','DR']
+
+def set_tpd_tpp(Norb,tpd,tpp,pds,pdp,pps,ppp):
+    # dxz and dyz has no tpd hopping
+    if pam.Norb==3:
+        tpd_nn_hop_dir = {'dx2y2' : ['L','R','U','D'],\
+                          'px'    : ['L','R'],\
+                          'py'    : ['U','D']}
+    elif pam.Norb==7:
+        tpd_nn_hop_dir = {'d3z2r2': ['L','R','U','D'],\
+                          'dx2y2' : ['L','R','U','D'],\
+                          'px'    : ['L','R'],\
+                          'py'    : ['U','D']}
+    elif pam.Norb==9:
+        tpd_nn_hop_dir = {'d3z2r2': ['L','R','U','D'],\
+                          'dx2y2' : ['L','R','U','D'],\
+                          'dxy'   : ['L','R','U','D'],\
+                          'px1'   : ['L','R'],\
+                          'py1'   : ['L','R'],\
+                          'px2'   : ['U','D'],\
+                          'py2'   : ['U','D']}
+    if pam.Norb==3:
+        if_tpd_nn_hop = {'dx2y2' : 1,\
+                         'px'    : 1,\
+                         'py'    : 1}
+    elif pam.Norb==7:
+        if_tpd_nn_hop = {'d3z2r2': 1,\
+                         'dx2y2' : 1,\
+                         'dxy'   : 0,\
+                         'dxz'   : 0,\
+                         'dyz'   : 0,\
+                         'px'    : 1,\
+                         'py'    : 1}
+    elif pam.Norb==9:
+        if_tpd_nn_hop = {'d3z2r2': 1,\
+                         'dx2y2' : 1,\
+                         'dxy'   : 1,\
+                         'dxz'   : 0,\
+                         'dyz'   : 0,\
+                         'px1'   : 1,\
+                         'py1'   : 1,\
+                         'px2'   : 1,\
+                         'py2'   : 1}
+    # hole language: sign convention followed from Fig 1 in H.Eskes's PRB 1990 paper
+    #                or PRB 2016: Characterizing the three-orbital Hubbard model...
+    if pam.Norb==3:
+        tpd_nn_hop_fac = {('dx2y2','L','px'):   tpd,\
+                          ('dx2y2','R','px'):  -tpd,\
+                          ('dx2y2','U','py'):   tpd,\
+                          ('dx2y2','D','py'):  -tpd,\
+                          # below just inverse dir of the above one by one
+                          ('px','R','dx2y2'):   tpd,\
+                          ('px','L','dx2y2'):  -tpd,\
+                          ('py','D','dx2y2'):   tpd,\
+                          ('py','U','dx2y2'):  -tpd}
+    elif pam.Norb==7:
+        # d3z2r2 has +,-,+ sign structure so that it is negative in x-y plane
+        tpd_nn_hop_fac = {('d3z2r2','L','px'): -tpd/np.sqrt(3),\
+                          ('d3z2r2','R','px'):  tpd/np.sqrt(3),\
+                          ('d3z2r2','U','py'):  tpd/np.sqrt(3),\
+                          ('d3z2r2','D','py'): -tpd/np.sqrt(3),\
+                          ('dx2y2','L','px'):   tpd,\
+                          ('dx2y2','R','px'):  -tpd,\
+                          ('dx2y2','U','py'):   tpd,\
+                          ('dx2y2','D','py'):  -tpd,\
+                          # below just inverse dir of the above one by one
+                          ('px','R','d3z2r2'): -tpd/np.sqrt(3),\
+                          ('px','L','d3z2r2'):  tpd/np.sqrt(3),\
+                          ('py','D','d3z2r2'):  tpd/np.sqrt(3),\
+                          ('py','U','d3z2r2'): -tpd/np.sqrt(3),\
+                          ('px','R','dx2y2'):   tpd,\
+                          ('px','L','dx2y2'):  -tpd,\
+                          ('py','D','dx2y2'):   tpd,\
+                          ('py','U','dx2y2'):  -tpd}
+    elif pam.Norb==9:
+        c = np.sqrt(3)/2.0
+        tpd_nn_hop_fac = {('d3z2r2','L','px1'):  pds/2.0,\
+                          ('d3z2r2','R','px1'): -pds/2.0,\
+                          ('d3z2r2','U','py2'): -pds/2.0,\
+                          ('d3z2r2','D','py2'):  pds/2.0,\
+                          ('dx2y2','L','px1'):   pds*c,\
+                          ('dx2y2','R','px1'):  -pds*c,\
+                          ('dx2y2','U','py2'):   pds*c,\
+                          ('dx2y2','D','py2'):  -pds*c,\
+                          ('dxy','L','py1'):  -pdp,\
+                          ('dxy','R','py1'):   pdp,\
+                          ('dxy','U','px2'):   pdp,\
+                          ('dxy','D','px2'):  -pdp,\
+                          # below just inverse dir of the above one by one
+                          ('px1','R','d3z2r2'):  pds/2.0,\
+                          ('px1','L','d3z2r2'): -pds/2.0,\
+                          ('py2','D','d3z2r2'): -pds/2.0,\
+                          ('py2','U','d3z2r2'):  pds/2.0,\
+                          ('px1','R','dx2y2'):   pds*c,\
+                          ('px1','L','dx2y2'):  -pds*c,\
+                          ('py2','D','dx2y2'):   pds*c,\
+                          ('py2','U','dx2y2'):  -pds*c,\
+                          ('py1','R','dxy'):  -pdp,\
+                          ('py1','L','dxy'):   pdp,\
+                          ('px2','D','dxy'):   pdp,\
+                          ('px2','U','dxy'):  -pdp}
+    ########################## tpp below ##############################
+    if pam.Norb==3 or pam.Norb==7:
+        tpp_nn_hop_fac = {('UR','px','py'): -tpp,\
+                                 ('UL','px','py'):  tpp,\
+                                 ('DL','px','py'): -tpp,\
+                                 ('DR','px','py'):  tpp}
+    elif pam.Norb==9:
+        tpp_nn_hop_fac = {('UR','px1','px2'):  0.5*(ppp-pps),\
+                          ('UL','px1','px2'):  0.5*(ppp-pps),\
+                          ('DL','px1','px2'):  0.5*(ppp-pps),\
+                          ('DR','px1','px2'):  0.5*(ppp-pps),\
+                          ('UR','py1','py2'):  0.5*(ppp-pps),\
+                          ('UL','py1','py2'):  0.5*(ppp-pps),\
+                          ('DL','py1','py2'):  0.5*(ppp-pps),\
+                          ('DR','py1','py2'):  0.5*(ppp-pps),\
+                          ('UR','px1','py2'): -0.5*(ppp+pps),\
+                          ('UL','px1','py2'):  0.5*(ppp+pps),\
+                          ('DL','px1','py2'): -0.5*(ppp+pps),\
+                          ('DR','px1','py2'):  0.5*(ppp+pps),\
+                          ('UR','px2','py1'): -0.5*(ppp+pps),\
+                          ('UL','px2','py1'):  0.5*(ppp+pps),\
+                          ('DL','px2','py1'): -0.5*(ppp+pps),\
+                          ('DR','px2','py1'):  0.5*(ppp+pps)}
+        
+    return tpd_nn_hop_dir, if_tpd_nn_hop, tpd_nn_hop_fac, tpp_nn_hop_fac
 
 def get_interaction_mat(sym):
     '''
@@ -163,7 +160,7 @@ def get_interaction_mat(sym):
     But both singlets and triplets can occur if the two holes have orthogonal spatial wave functions 
     and they will differ in energy by the exchange terms
     
-    e2 denotes xz,xz or xz,yz depends on which integral <ab|1/r_12|cd> is nonzero, see handwritten notes
+    ee denotes xz,xz or xz,yz depends on which integral <ab|1/r_12|cd> is nonzero, see handwritten notes
     
     AorB_sym = +-1 is used to label if the state is (e1e1+e2e2)/sqrt(2) or (e1e1-e2e2)/sqrt(2)
     For syms (in fact, all syms except 1A1 and 1B1) without the above two states, AorB_sym is set to be 0
@@ -310,7 +307,7 @@ def set_matrix_element(row,col,data,new_state,col_index,VS,element):
         row.append(row_index)
         col.append(col_index)
 
-def create_tpd_nn_matrix(VS):
+def create_tpd_nn_matrix(VS,tpd_nn_hop_dir, if_tpd_nn_hop, tpd_nn_hop_fac):
     '''
     Create nearest neighbor (NN) pd hopping part of the Hamiltonian
 
@@ -332,7 +329,7 @@ def create_tpd_nn_matrix(VS):
     print "=========================="
     
     dim = VS.dim
-    tpd_orbs = tpd_nn_hopping_factor.keys()
+    tpd_orbs = tpd_nn_hop_fac.keys()
     data = []
     row = []
     col = []
@@ -350,8 +347,8 @@ def create_tpd_nn_matrix(VS):
         x2, y2 = start_state['hole2_coord']
 
         # hole 1 hops: some d-orbitals might have no tpd
-        if if_tpd_nn_hopping[orb1] == 1:
-            for dir_ in tpd_nn_hopping_directions[orb1]:
+        if if_tpd_nn_hop[orb1] == 1:
+            for dir_ in tpd_nn_hop_dir[orb1]:
                 vx, vy = directions_to_vecs[dir_]
                 orbs1 = lat.get_unit_cell_rep(x1+vx, y1+vy)
                 if orbs1 == ['NotOnSublattice']:
@@ -359,7 +356,7 @@ def create_tpd_nn_matrix(VS):
 
                 # consider t_pd for all cases; when up hole hops, dn hole should not change orb
                 for o1 in orbs1:
-                    if if_tpd_nn_hopping[o1] == 0:
+                    if if_tpd_nn_hop[o1] == 0:
                         continue
                     # consider Pauli principle
                     if s1==s2 and o1==orb2 and (x1+vx,y1+vy)==(x2,y2):
@@ -371,18 +368,18 @@ def create_tpd_nn_matrix(VS):
                                     
                         o12 = tuple([orb1, dir_, o1])
                         if o12 in tpd_orbs:
-                            set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
+                            set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hop_fac[o12]*ph)
 
         # hole 2 hops; some d-orbitals might have no tpd
-        if if_tpd_nn_hopping[orb2] == 1:
-            for dir_ in tpd_nn_hopping_directions[orb2]:
+        if if_tpd_nn_hop[orb2] == 1:
+            for dir_ in tpd_nn_hop_dir[orb2]:
                 vx, vy = directions_to_vecs[dir_]
                 orbs2 = lat.get_unit_cell_rep(x2+vx, y2+vy)
                 if orbs2 == ['NotOnSublattice']:
                     continue
                     
                 for o2 in orbs2:
-                    if if_tpd_nn_hopping[o2] == 0:
+                    if if_tpd_nn_hop[o2] == 0:
                         continue
                     # consider Pauli principle
                     if s1==s2 and orb1==o2 and (x1,y1)==(x2+vx, y2+vy):
@@ -394,7 +391,7 @@ def create_tpd_nn_matrix(VS):
                         
                         o12 = tuple([orb2, dir_, o2])
                         if o12 in tpd_orbs:
-                            set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hopping_factor[o12]*ph)
+                            set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hop_fac[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)
@@ -406,7 +403,7 @@ def create_tpd_nn_matrix(VS):
     
     return out
 
-def create_tpp_nn_matrix(VS): 
+def create_tpp_nn_matrix(VS,tpp_nn_hop_fac): 
     '''
     similar to comments in create_tpd_nn_matrix
     '''   
@@ -431,7 +428,7 @@ def create_tpp_nn_matrix(VS):
         
         # hole1 hops: only p-orbitals has t_pp 
         if orb1 in pam.O_orbs: 
-            for dir_ in tpp_nn_hopping_directions:
+            for dir_ in tpp_nn_hop_dir:
                 vx, vy = directions_to_vecs[dir_]
                 orbs1 = lat.get_unit_cell_rep(x1+vx, y1+vy)
                 if orbs1 == ['NotOnSublattice'] or orbs1 == pam.Cu_orbs:
@@ -449,11 +446,11 @@ def create_tpp_nn_matrix(VS):
                                     
                         o12 = sorted([orb1, dir_, o1])
                         o12 = tuple(o12)
-                        set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
+                        set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hop_fac[o12]*ph)
 
         # hole 2 hops, only p-orbitals has t_pp 
         if orb2 in pam.O_orbs:
-            for dir_ in tpp_nn_hopping_directions:
+            for dir_ in tpp_nn_hop_dir:
                 vx, vy = directions_to_vecs[dir_]
                 orbs2 = lat.get_unit_cell_rep(x2+vx, y2+vy)
 
@@ -471,7 +468,7 @@ def create_tpp_nn_matrix(VS):
 
                         o12 = sorted([orb2, dir_, o2])
                         o12 = tuple(o12)
-                        set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hopping_factor[o12]*ph)
+                        set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hop_fac[o12]*ph)
 
     row = np.array(row)
     col = np.array(col)
@@ -483,7 +480,7 @@ def create_tpp_nn_matrix(VS):
 
     return out
 
-def create_edep_diag_matrix(VS):
+def create_edep_diag_matrix(VS,ep):
     '''
     Create diagonal part of the site energies. Assume ed = 0!
     '''    
@@ -504,11 +501,11 @@ def create_edep_diag_matrix(VS):
         if orb1 in pam.Cu_orbs: 
             diag_el += pam.ed
         elif orb1 in pam.O_orbs:
-            diag_el += pam.ep
+            diag_el += ep
         if orb2 in pam.Cu_orbs: 
             diag_el += pam.ed
         elif orb2 in pam.O_orbs:
-            diag_el += pam.ep
+            diag_el += ep
 
         data.append(diag_el); row.append(i); col.append(i)
 
@@ -571,7 +568,7 @@ def get_double_occu_list(VS):
     
     return d_list, p_list
 
-def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym):
+def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym, Upp):
     '''
     Create Coulomb-exchange interaction matrix of d-multiplets
     
@@ -645,7 +642,7 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym):
                  
     # Create Upp matrix for p-orbital multiplets
     for i in p_double:
-        data.append(pam.Upp); row.append(i); col.append(i)
+        data.append(Upp); row.append(i); col.append(i)
 
     row = np.array(row)
     col = np.array(col)
@@ -657,7 +654,7 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym):
 
     return out, dd_state_indices
 
-def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val):
+def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val, Upp):
     '''
     Create Coulomb-exchange interaction matrix of d-multiplets including all symmetries
     
@@ -732,7 +729,7 @@ def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val):
                  
     # Create Upp matrix for p-orbital multiplets
     for i in p_double:
-        data.append(pam.Upp); row.append(i); col.append(i)
+        data.append(Upp); row.append(i); col.append(i)
 
     row = np.array(row)
     col = np.array(col)
@@ -744,7 +741,7 @@ def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val):
 
     return out, dd_state_indices
 
-def create_interaction_matrix_Norb3(VS,d_double,p_double):
+def create_interaction_matrix_Norb3(VS,d_double,p_double, Upp):
     '''
     Create Coulomb-exchange interaction matrix of d-multiplets
     
@@ -777,7 +774,7 @@ def create_interaction_matrix_Norb3(VS,d_double,p_double):
         print "dd_state_indices", i, ", state: ", s1,o1,s2,o2
    
     for i in p_double:
-        data.append(pam.Upp); row.append(i); col.append(i)
+        data.append(Upp); row.append(i); col.append(i)
 
     row = np.array(row)
     col = np.array(col)

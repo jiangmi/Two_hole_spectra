@@ -108,7 +108,9 @@ def create_singlet_triplet_basis_change_matrix(VS,d_double):
 
         if i not in count_list:
             j, ph = find_singlet_triplet_partner(start_state,VS)
-            #print i,' partner state is ',j
+            #print "partner states:", i,j
+            #print "state i = ", s1, orb1, s2, orb2
+            #print "state j = ",'up',orb2,'dn',orb1
             count_list.append(j)
                 
             if j==i:
@@ -159,10 +161,6 @@ def create_singlet_triplet_basis_change_matrix(VS,d_double):
                 data.append(-ph);   row.append(j); col.append(i)
                 S_val[i]  = 0
                 Sz_val[i] = 0
-
-                #print "partner states:", i,j
-                #print "state i = ", s1, orb1, s2, orb2
-                #print "state j = ",'up',orb2,'dn',orb1
 
                 # append matrix elements for triplet states
                 data.append(1.0);  row.append(i); col.append(j)
@@ -259,7 +257,7 @@ def create_singlet_triplet_basis_change_matrix_d_double(VS,d_double):
                     S_val[i]  = 0
                     Sz_val[i] = 0
                     count_singlet += 1
-                elif orb1==orb2=='dxz':  # no need to consider e2='dyz' case
+                elif orb1=='dxz':  # no need to consider e2='dyz' case
                     # find e2e2 state:
                     for e2 in d_double:
                         state = VS.get_state(VS.lookup_tbl[e2])

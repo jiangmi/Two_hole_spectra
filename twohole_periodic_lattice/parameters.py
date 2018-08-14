@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 160
+Mc = 60
 ed = 0
-ep = 3.5
+eps = [3.5]#, 4.5]
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -16,11 +16,10 @@ ep = 3.5
 
 # IMPORTANT: keep all hoppings below positive to avoid confusion
 #            hopping signs are considered in dispersion separately
-Norb = 3
+Norb = 7
 if Norb==3 or Norb==7:
-    #tpd_tpp_set = [(1.3, 0.00001),(1.3, 0.00001)]
-    tpd = 1.3
-    tpp = 0.6
+    tpds = [1.3]#0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8]
+    tpps = [0.6]
 elif Norb==9:
     pds = 1.5
     pdp = 0.7
@@ -35,16 +34,24 @@ kx = M_PI#/2.
 ky = M_PI#/2.
 kx = 0.
 ky = 0.
-eta = 0.05
+eta = 0.01
 
-# only used for 1A1_lowest_peak_dispersion.ipynb
+# Below only used for 1A1_lowest_peak_dispersion.ipynb
 # then the above kx,ky are neglected
-Nk = 4
+Nk = 10
 
 w_start = -4.
-w_stop = 3.
+w_stop = 4.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
+
+basis_change_type = 'd_double' # 'all_states' or 'd_double'
+
+if_write_lowpeak_ep_tpd = 0
+if_write_Aw = 0
+if_write_1A1_dispersion = 1
+if_savefig_Aw = 1
+if_savefig_1A1_dispersion = 1
 
 if_get_ground_state = 0
 if_project_out_two_holes_on_different_Cu = 0
@@ -77,7 +84,7 @@ orbs = Cu_orbs + O1_orbs + O2_orbs
 assert(len(orbs)==Norb)
 # ======================================================================
 # Below for interaction matrix
-Upp = 0
+Upps = [0]
 if Norb==3:
     Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
