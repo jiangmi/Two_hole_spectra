@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 60
+Mc = 50
 ed = 0
-eps = [3.5]#, 4.5]
+eps = [3.24]#, 4.5]
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -18,8 +18,8 @@ eps = [3.5]#, 4.5]
 #            hopping signs are considered in dispersion separately
 Norb = 7
 if Norb==3 or Norb==7:
-    tpds = [1.3]#0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8]
-    tpps = [0.6]
+    tpds = [1.13]#0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8]
+    tpps = [0.49]
 elif Norb==9:
     pds = 1.5
     pdp = 0.7
@@ -30,18 +30,18 @@ elif Norb==9:
     #pps = 0.00001
     #ppp = 0.00001
 
-kx = M_PI#/2.
-ky = M_PI#/2.
-kx = 0.
-ky = 0.
-eta = 0.01
+single_k_mode = 1
+if single_k_mode==1:
+    kx = M_PI#/2.
+    ky = M_PI#/2.
+    kx = 0.
+    ky = 0.
+else:
+    Nk = 1
 
-# Below only used for 1A1_lowest_peak_dispersion.ipynb
-# then the above kx,ky are neglected
-Nk = 10
-
-w_start = -4.
-w_stop = 4.
+eta = 0.1
+w_start = -5.
+w_stop = 20.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
@@ -49,9 +49,9 @@ basis_change_type = 'd_double' # 'all_states' or 'd_double'
 
 if_write_lowpeak_ep_tpd = 0
 if_write_Aw = 0
-if_write_1A1_dispersion = 1
+if_write_1A1_dispersion = 0
 if_savefig_Aw = 1
-if_savefig_1A1_dispersion = 1
+if_savefig_1A1_dispersion = 0
 
 if_get_ground_state = 0
 if_project_out_two_holes_on_different_Cu = 0
@@ -88,7 +88,7 @@ Upps = [0]
 if Norb==3:
     Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['1A1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
+    symmetries = ['1A1','1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
     print "symmetries = ",symmetries
     A = 6.5
     B = 0.15

@@ -2,7 +2,7 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 16
+Mc = 1
 ed = 0
 eps = [3.5]
 
@@ -18,7 +18,7 @@ eps = [3.5]
 #            hopping signs are considered in dispersion separately
 Norb = 7
 if Norb==3 or Norb==7:
-    tpds = [1.3]#0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+    tpds = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     tpps = [0.6]
 elif Norb==9:
     pds = 1.5
@@ -30,14 +30,21 @@ elif Norb==9:
     #pps = 0.00001
     #ppp = 0.00001
 
-eta = 0.1
+eta = 0.01
 w_start = -5.
-w_stop = 20.
+w_stop = 3.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
-basis_change_type = 'd_double' # 'all_states' or 'd_double'
+basis_change_type = 'all_states' # 'all_states' or 'd_double'
+
+if_write_lowpeak_ep_tpd = 0
+if_write_Aw = 0
+if_savefig_Aw = 1
+
 if_get_ground_state = 0
+if if_get_ground_state==1:
+    Neval = 15
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
@@ -47,6 +54,7 @@ if Norb==3:
     Cu_orbs = ['dx2y2']
 else:
     Cu_orbs = ['dx2y2','dxy','dxz','dyz','d3z2r2']
+    #Cu_orbs = ['dx2y2','d3z2r2']
     
 if Norb==3 or Norb==7:
     O1_orbs  = ['px']
@@ -64,10 +72,10 @@ print "Cu_orbs = ", Cu_orbs
 print "O1_orbs = ",  O1_orbs
 print "O2_orbs = ",  O2_orbs
 orbs = Cu_orbs + O1_orbs + O2_orbs
-assert(len(orbs)==Norb)
+#assert(len(orbs)==Norb)
 # ======================================================================
 # Below for interaction matrix
-Upps = [0]
+Upps = [0]#1.2345]
 if Norb==3:
     Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:

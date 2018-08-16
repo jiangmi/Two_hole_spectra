@@ -654,7 +654,7 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym, 
 
     return out, dd_state_indices
 
-def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val, Upp):
+def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val, AorB_sym, Upp):
     '''
     Create Coulomb-exchange interaction matrix of d-multiplets including all symmetries
     
@@ -671,34 +671,34 @@ def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val, Upp):
     col = []
     dd_state_indices = []
     
-    channels = ['1AB1','1A2','3A2','3B1','1B2','3B2','1E','3E']
+    channels = ['1A1','1A2','3A2','1B1','3B1','1E','3E','1B2','3B2']
 
-    for i in d_double:
-        # state is original state but its orbital info remains after basis change
-        state = VS.get_state(VS.lookup_tbl[i])
-        o1 = state['hole1_orb']
-        o2 = state['hole2_orb']
-        o12 = sorted([o1,o2])
-        o12 = tuple(o12)
+    for sym in channels:
+        state_order, interaction_mat, Stot, Sz_set, AorB = get_interaction_mat(sym)
+        sym_orbs = state_order.keys()
+        print "orbitals in sym ", sym, "= ", sym_orbs
 
-        # S_val, Sz_val obtained from basis.create_singlet_triplet_basis_change_matrix
-        S12  = S_val[i]
-        Sz12 = Sz_val[i]
+        for i in d_double:
+            # state is original state but its orbital info remains after basis change
+            state = VS.get_state(VS.lookup_tbl[i])
+            o1 = state['hole1_orb']
+            o2 = state['hole2_orb']
+            o12 = sorted([o1,o2])
+            o12 = tuple(o12)
 
-        # find the correpsonding sym
-        for sym in channels:
-            state_order, interaction_mat, Stot, Sz_set = get_interaction_mat(sym)
-            sym_orbs = state_order.keys()
+            # S_val, Sz_val obtained from basis.create_singlet_triplet_basis_change_matrix
+            S12  = S_val[i]
+            Sz12 = Sz_val[i]
 
-            # continue only if (o1,o2) and S, Sz are within desired sym
+            # continue only if (o1,o2) is within desired sym
             if o12 not in sym_orbs or S12!=Stot or Sz12 not in Sz_set:
                 continue
-                
-            #print 'state i', o12, ' belongs to sym ', sym
-                
+
+            if (o1==o2=='dxz' or o1==o2=='dyz') and AorB_sym[i]!=AorB:
+                continue
+
             # get the corresponding index in sym for setting up matrix element
             idx1 = state_order[o12]
-            
             for j in d_double:
                 state = VS.get_state(VS.lookup_tbl[j])
                 o3 = state['hole1_orb']
@@ -708,22 +708,23 @@ def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val, Upp):
                 S34  = S_val[j]
                 Sz34 = Sz_val[j]
 
-                # only same total spin S and Sz state have nonzero matrix element
-                if o34 not in sym_orbs or S34!=S12 or Sz34!=Sz12:
+                if (o3==o4=='dxz' or o3==o4=='dyz') and AorB_sym[j]!=AorB:
                     continue
 
-                idx2 = state_order[o34]
+                # only same total spin S and Sz state have nonzero matrix element
+                if o34 in sym_orbs and S34==S12 and Sz34==Sz12:
+                    idx2 = state_order[o34]
 
-                #print o12[0],o12[1],S12,Sz12," ",o34[0],o34[1],S34,Sz34," ", interaction_mat[idx1][idx2]
-                #print idx1, idx2
+                    #print o12[0],o12[1],S12,Sz12," ",o34[0],o34[1],S34,Sz34," ", interaction_mat[idx1][idx2]
+                    #print idx1, idx2
 
-                val = interaction_mat[idx1][idx2]
-                data.append(val); row.append(i); col.append(j)
+                    val = interaction_mat[idx1][idx2]
+                    data.append(val); row.append(i); col.append(j)
 
             # get index for desired dd states
             # Note: for transformed basis of singlet/triplet
             # index can differ from that in original basis
-            if 'dx2y2' in o12 and 'd3z2r2' not in o12:
+            if 'dx2y2' in o12:
                 dd_state_indices.append(i)
                 print "dd_state_indices", i, ", state: S= ", S12, " Sz= ", Sz12, "orb= ", o1,o2
                  
