@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 1
+Mc = 16
 ed = 0
-eps = [3.5]
+eps = [6.5]#,3.5,4.5]
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -18,8 +18,9 @@ eps = [3.5]
 #            hopping signs are considered in dispersion separately
 Norb = 7
 if Norb==3 or Norb==7:
-    tpds = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
-    tpps = [0.6]
+    tpds = [0.00001]  # for check_CuO4_eigenvalues.py
+    tpds = np.arange(0.35, 0.5, 0.01)
+    tpps = [0.275]
 elif Norb==9:
     pds = 1.5
     pdp = 0.7
@@ -31,20 +32,27 @@ elif Norb==9:
     #ppp = 0.00001
 
 eta = 0.01
-w_start = -5.
-w_stop = 3.
+w_start = 2.
+w_stop = 5.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
-basis_change_type = 'all_states' # 'all_states' or 'd_double'
+basis_change_type = 'd_double' # 'all_states' or 'd_double'
+if_print_VS_after_basis_change = 0
 
-if_write_lowpeak_ep_tpd = 0
+# only for 1A1 channel:
+if_compute_a1b1_1A1 = 0
+if_compute_b1px_1A1 = 0
+
+if_find_lowpeak = 0
+if if_find_lowpeak==1:
+    if_write_lowpeak_ep_tpd = 0
 if_write_Aw = 0
 if_savefig_Aw = 1
 
-if_get_ground_state = 0
+if_get_ground_state = 1
 if if_get_ground_state==1:
-    Neval = 15
+    Neval = 1
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
@@ -75,11 +83,11 @@ orbs = Cu_orbs + O1_orbs + O2_orbs
 #assert(len(orbs)==Norb)
 # ======================================================================
 # Below for interaction matrix
-Upps = [0]#1.2345]
+Upps = [0]
 if Norb==3:
     Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['1A1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
+    symmetries = ['ALL']#,'3B1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
     print "symmetries = ",symmetries
     A = 6.5
     B = 0.15

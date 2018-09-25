@@ -169,6 +169,7 @@ def get_interaction_mat(sym):
     B = pam.B
     C = pam.C
     
+    # not useful if treat 1A1 and 1B1 as correct ee states as (exex +- eyey)/sqrt(2)
     if sym=='1AB1':
         fac = np.sqrt(6)
         Stot = 0
@@ -606,6 +607,7 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym, 
         if o12 not in sym_orbs or S12!=Stot or Sz12 not in Sz_set:
             continue
             
+        # distinguish (e1e1+e2e2)/sqrt(2) or (e1e1-e2e2)/sqrt(2)
         if (o1==o2=='dxz' or o1==o2=='dyz') and AorB_sym[i]!=AorB:
             continue
 
@@ -639,7 +641,7 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym, 
         if 'dx2y2' in o12:
             dd_state_indices.append(i)
             print "dd_state_indices", i, ", state: S= ", S12, " Sz= ", Sz12, "orb= ", o1,o2
-                 
+
     # Create Upp matrix for p-orbital multiplets
     for i in p_double:
         data.append(Upp); row.append(i); col.append(i)
@@ -651,7 +653,40 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym, 
     # check if hoppings occur within groups of (up,up), (dn,dn), and (up,dn) 
     assert(check_spin_group(row,col,data,VS)==True)
     out = sps.coo_matrix((data,(row,col)),shape=(dim,dim))
+    
+    # also project onto 3B1 state (a1,b1) for 1A1 sym 
+    if sym=='1A1' and pam.if_compute_a1b1_1A1==1:
+        for i in d_double:
+            state = VS.get_state(VS.lookup_tbl[i])
+            o1 = state['hole1_orb']
+            o2 = state['hole2_orb']
+            o12 = sorted([o1,o2])
+            o12 = tuple(o12)
+            
+            # S=1 state has degeneracy=3 whose A(w) are the same so only need choose Sz=1 state
+            # 3B1 below
+            if 'd3z2r2' in o12 and 'dx2y2' in o12 and S_val[i]==1 and Sz_val[i]==1:
+                dd_state_indices.append(i)
+                print "3B1_state_indices", i, ", state: S= ", S_val[i], " Sz= ", Sz_val[i], "orb= ", o1,o2
 
+    # also project onto A1 state triplet (b1,px/py) for 1A1 sym 
+    # 3A1 below: only choose the case with px (py degenerate)
+    if sym=='1A1' and pam.if_compute_b1px_1A1==1:
+        #state = VS.create_state('up','dx2y2',0,0,'up','px',1,0)
+        
+        for i in xrange(0,dim):
+            state = VS.get_state(VS.lookup_tbl[i])
+            s1 = state['hole1_spin']
+            s2 = state['hole2_spin']
+            o1 = state['hole1_orb']
+            o2 = state['hole2_orb']
+            x1, y1 = state['hole1_coord']
+            x2, y2 = state['hole2_coord']
+        
+            if o1=='dx2y2' and o2=='px' and (x1,y1)==(0,0) and (x2,y2)==(1,0) and S_val[i]==1 and Sz_val[i]==1:
+                dd_state_indices.append(i)
+                print "3A1_state_indices", i, ", state: S= ", S_val[i], " Sz= ", Sz_val[i], "orb= ", o1,o2, 'x=',x1,x2
+    
     return out, dd_state_indices
 
 def create_interaction_matrix_ALL_syms(VS,d_double,p_double,S_val, Sz_val, AorB_sym, Upp):

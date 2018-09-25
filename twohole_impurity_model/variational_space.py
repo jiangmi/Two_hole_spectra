@@ -171,7 +171,8 @@ class VariationalSpace:
             tx1, ty1 = state['hole1_coord']
             tx2, ty2 = state['hole2_coord']
             #if ts1=='up' and ts2=='up':
-            print i, ts1,torb1,tx1,ty1,ts2,torb2,tx2,ty2
+            if torb1=='dx2y2' and torb2=='px':
+                print i, ts1,torb1,tx1,ty1,ts2,torb2,tx2,ty2
                 
     def create_lookup_tbl(self):
         '''

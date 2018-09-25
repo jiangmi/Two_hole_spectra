@@ -35,7 +35,7 @@ def count_VS(VS):
     assert(count_upup==count_dndn)
     
     return count_upup, count_updn, count_dnup, count_dndn
-
+            
 def find_singlet_triplet_partner(state,VS):
     '''
     For a given state find its partner state to form a singlet/triplet.
@@ -172,7 +172,7 @@ def create_singlet_triplet_basis_change_matrix(VS,d_double):
                 count_triplet += 1
 
     return sps.coo_matrix((data,(row,col)),shape=(VS.dim,VS.dim))/np.sqrt(2.0), S_val, Sz_val, AorB_sym
-
+                
 def find_singlet_triplet_partner_d_double(state,VS):
     '''
     For a given state find its partner state to form a singlet/triplet.
@@ -305,3 +305,18 @@ def create_singlet_triplet_basis_change_matrix_d_double(VS,d_double):
                     count_triplet += 1
 
     return sps.coo_matrix((data,(row,col)),shape=(VS.dim,VS.dim))/np.sqrt(2.0), S_val, Sz_val, AorB_sym
+
+def print_VS_after_basis_change(VS,S_val,Sz_val):
+    print 'print_VS_after_basis_change:'
+    for i in xrange(0,VS.dim):
+        state = VS.get_state(VS.lookup_tbl[i])
+        ts1 = state['hole1_spin']
+        ts2 = state['hole2_spin']
+        torb1 = state['hole1_orb']
+        torb2 = state['hole2_orb']
+        tx1, ty1 = state['hole1_coord']
+        tx2, ty2 = state['hole2_coord']
+        #if ts1=='up' and ts2=='up':
+        if torb1=='dx2y2' and torb2=='px':
+            print i, ts1,torb1,tx1,ty1,ts2,torb2,tx2,ty2,'S=',S_val[i],'Sz=',Sz_val[i]
+            
