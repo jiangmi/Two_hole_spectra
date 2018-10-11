@@ -789,7 +789,7 @@ def create_interaction_matrix_Norb3(VS,d_double,p_double, Upp):
 
     return out, dd_state_indices
 
-def get_pp_state_indices(VS):
+def get_pp_state_indices(VS, S_val, Sz_val, AorB_sym):
     '''
     Get the list of index for desired pp and dp states for computing A(w)
     '''   
@@ -806,12 +806,17 @@ def get_pp_state_indices(VS):
         x2, y2 = state['hole2_coord']
 
         if o1 in pam.O_orbs and o2 in pam.O_orbs and (x1,y1)==(0,1) and (x2,y2)==(1,0):
-            pp_state_indices.append(i)
-            print "pp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
+            # record singlet or triplet (only need Sz=1 state for calculating A(w))
+            # note that this only works if basis_change_type = 'all_states' instead of 'd_double' in parameters.py
+            if S_val[i]==0:
+                pp_state_indices.append(i)
+            if S_val[i]==1 and Sz_val[i]==1:
+                pp_state_indices.append(i)
+            #print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
     
     return pp_state_indices
 
-def get_dp_state_indices(VS):
+def get_dp_state_indices(VS, S_val, Sz_val, AorB_sym):
     '''
     Get the list of index for desired pp and dp states for computing A(w)
     '''   
@@ -828,12 +833,18 @@ def get_dp_state_indices(VS):
         x2, y2 = state['hole2_coord']
             
         if o1 in pam.Cu_orbs and o2 in pam.O_orbs and (x1,y1)==(0,0) and (x2,y2)==(1,0):
-            dp_state_indices.append(i)
-            #print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
+            # record singlet or triplet (only need Sz=1 state for calculating A(w))
+            # note that this only works if basis_change_type = 'all_states' instead of 'd_double' in parameters.py
+            if S_val[i]==0:
+                dp_state_indices.append(i)
+                print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2,S_val[i],Sz_val[i]
+            if S_val[i]==1 and Sz_val[i]==1:
+                dp_state_indices.append(i)
+                print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2,S_val[i],Sz_val[i]
     
     return dp_state_indices
 
-def get_Cu_dx2y2_O_indices(VS):
+def get_Cu_dx2y2_O_indices(VS, S_val, Sz_val, AorB_sym):
     '''
     Get the list of index for states with one hole on Cu and the other on neighboring O 
     with dx2-y2 symmetry (1/sqrt(4)) * (px1-py2-px3+py4)
@@ -841,27 +852,27 @@ def get_Cu_dx2y2_O_indices(VS):
     dim = VS.dim
     Cu_dx2y2_O_indices = []
     
-    state = vs.create_state('up','dx2y2',0,0,'dn','px',1,0)
-    canonical_state,_ = vs.make_state_canonical(state)
-    idx = VS.get_index(canonical_state)
-    Cu_dx2y2_O_indices.append(idx)
-    print "Cu_dx2y2_O_indices", idx
-    
-    state = vs.create_state('up','dx2y2',0,0,'dn','py',0,1)
-    canonical_state,_ = vs.make_state_canonical(state)
-    idx = VS.get_index(canonical_state)
-    Cu_dx2y2_O_indices.append(idx)
-    print "Cu_dx2y2_O_indices", idx
-    
-    '''
-    state = vs.create_state('up','dx2y2',0,0,'dn','px',-1,0)
-    canonical_state,_ = vs.make_state_canonical(state)
-    Cu_dx2y2_O_indices.append(VS.get_index(canonical_state))
-    
-    state = vs.create_state('up','dx2y2',0,0,'dn','py',0,-1)
-    canonical_state,_ = vs.make_state_canonical(state)
-    Cu_dx2y2_O_indices.append(VS.get_index(canonical_state))
-    '''
+    for i in xrange(0,dim):
+        state = VS.get_state(VS.lookup_tbl[i])
+        s1 = state['hole1_spin']
+        s2 = state['hole2_spin']
+        o1 = state['hole1_orb']
+        o2 = state['hole2_orb']
+        x1, y1 = state['hole1_coord']
+        x2, y2 = state['hole2_coord']
+        
+        if o1!='dx2y2' and o2!='dx2y2':
+            continue
+            
+        if o2 in pam.O_orbs and (x1,y1)==(0,0) and (x2,y2)==(1,0):
+            # record singlet or triplet (only need Sz=1 state for calculating A(w))
+            # note that this only works if basis_change_type = 'all_states' instead of 'd_double' in parameters.py
+            if S_val[i]==0:
+                Cu_dx2y2_O_indices.append(i)
+            if S_val[i]==1 and Sz_val[i]==1:
+                Cu_dx2y2_O_indices.append(i)
+            #print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
+            
     return Cu_dx2y2_O_indices
 
 def check_dense_matrix_hermitian(matrix):

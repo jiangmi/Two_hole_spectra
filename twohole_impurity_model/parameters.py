@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 40
+Mc = 6
 ed = 0
-eps = np.arange(0.5, 6.6, 0.5) #[3.5]#,3.5,4.5]
+eps = np.arange(4, 4.9, 4.3) #[3.5]#,3.5,4.5]
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -19,7 +19,7 @@ eps = np.arange(0.5, 6.6, 0.5) #[3.5]#,3.5,4.5]
 Norb = 7
 if Norb==3 or Norb==7:
     tpds = [0.00001]  # for check_CuO4_eigenvalues.py
-    tpds = [0.9] #np.arange(0.25, 0.4, 0.01)
+    #tpds = [0.8] #np.arange(0.25, 0.4, 0.01)
     tpps = [0.55]
 elif Norb==9:
     pds = 1.5
@@ -33,14 +33,14 @@ elif Norb==9:
 
 eta = 0.01
 w_start = -5.
-w_stop = 6.
+w_stop = 10.
 w_vals = np.arange(w_start,w_stop,eta/4.0)
 Lanczos_maxiter = 800
 
-basis_change_type = 'd_double' # 'all_states' or 'd_double'
+basis_change_type = 'all_states' # 'all_states' or 'd_double'
 if_print_VS_after_basis_change = 0
 
-if_find_lowpeak = 1
+if_find_lowpeak = 0
 if if_find_lowpeak==1:
     if_find_second_lowpeak = 1
     if_write_lowpeak_ep_tpd = 1
@@ -52,8 +52,8 @@ if if_get_ground_state==1:
     Neval = 1
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
-if_compute_Aw_dp = 0
-if_compute_Aw_Cu_dx2y2_O = 0
+if_compute_Aw_dp = 1
+if_compute_Aw_Cu_dx2y2_O = 1
 
 if Norb==3:
     Cu_orbs = ['dx2y2']
