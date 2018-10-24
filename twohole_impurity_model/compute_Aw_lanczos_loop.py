@@ -49,20 +49,19 @@ def write_Aw(fname,Aw):
     f.write('#omega\tspectral weight\n')
     for i in xrange(0,len(w_vals)):
         f.write('{:.6e}\t{:.6e}\n'.format(float(w_vals[i]),Aw[i]))
-       
-def write_lowpeak(fname,ep,tpd,w_peak,weight,w_peak2):
+
+def write_lowpeak(fname,ep,tpd,w_peak,weight):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_lowpeak/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(ep, tpd, w_peak, weight, w_peak2))
- 
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(ep,tpd,w_peak,weight))
+           
 def write_lowpeak_and_GS(fname,ep,tpd,w_peak,weight,E_gs):
     # lowpeak energy of b1b1 singlet and a1b1 triplet state, then G.S. energy
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_lowpeak/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format \
-            (ep,tpd,w_peak1,weight1,w_peak2,weight2,E_gs))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(ep,tpd,w_peak,weight,E_gs))
 
 def getAw(matrix,index,VS,w_vals):  
     # set up Lanczos solver
@@ -85,21 +84,23 @@ def getAw(matrix,index,VS,w_vals):
         Aw += tab[n] * eta / M_PI * ( (w_vals - V[n])**2 + eta**2)**(-1)
         
     if pam.if_find_lowpeak==1:
-        w_peak, weight, w_peak2 = getAw_peak_pos_weight(Aw, D, tab)
+        if pam.peak_mode=='highest_peak':
+            w_peak, weight = getAw_peak_highest(Aw, D, tab)
+        elif pam.peak_mode=='lowest_peak':
+            w_peak, weight = getAw_peak_lowest(Aw, D, tab)
     else:
-        w_peak = 0.; weight = 0.; w_peak2 = 0.
+        w_peak = 0.; weight = 0.
         
-    return Aw, w_peak, weight, w_peak2
+    return Aw, w_peak, weight
 
-def getAw_peak_pos_weight(Aw, D, tab):  
+def getAw_peak_highest(Aw, D, tab):  
     '''
-    find the position and weight of lowest peak of Aw
-    used to explore their dispersion in the high symmetry points in BZ
+    find the position and weight of highest peak of Aw, which might be lowest
     '''    
     w_idx = np.argmax(Aw)
-    print 'peak index',w_idx
+    print 'highest peak index',w_idx
     w_peak = w_vals[w_idx]
-    print 'w_lowpeak = ', w_peak
+    print 'highest peak at w = ', w_peak
     
     # find the area below the whole peak, namely the peak weight
     # ==========================================================
@@ -120,31 +121,12 @@ def getAw_peak_pos_weight(Aw, D, tab):
         wid += 1
     w_max = wid
     
-    print 'peak w-range = [', w_vals[w_min], w_vals[w_max], ']'
+    print 'highest peak w-range = [', w_vals[w_min], w_vals[w_max], ']'
     
     # 2. Simpson's rule
     weight = integrate.simps(Aw[w_min:w_max], w_vals[w_min:w_max])
-    print 'peak, weight = ', w_peak, '  ', weight
-                          
-    # 3. if necessary, compute the the nearest right peak of the lowest peak
-    #    namely the bottom of the continuum band. Note that this only applies
-    #    for the case that the lowest peak is already discrete state
-    #    This is aimed to calculate the distance between the lowest peak and continnum band bottom
-    #    which is useful for extrapolation to obtain critical Delta between 1A1/3B1 peak and no discrete states
-    if pam.if_find_second_lowpeak==1:
-        wid = w_max
-        # go through the distance between the lowest peak and continnum band bottom:
-        while Aw[wid]<1.e-3:
-            wid += 1
-        print 'continuum band bottom = ', w_vals[wid]
-
-        # go up until the peak:
-        while Aw[wid+1]>Aw[wid]:
-            wid += 1
-        w_peak2 = w_vals[wid]
-        print 'continuum band lowest peak = ', w_vals[wid], Aw[wid]
-    else:
-        w_peak2 = 0
+    print 'highest peak, weight = ', w_peak, '  ', weight
+    
     '''
     # find the eigenvalue D[n] nearest to w_peak so that its index n
     # leads to weight = tab[n]; Note that this weight is actually for 
@@ -157,7 +139,50 @@ def getAw_peak_pos_weight(Aw, D, tab):
     weight = tab[idx]
     assert(weight>=0.0 and weight<=1.0)
     '''
-    return w_peak, weight, w_peak2
+    return w_peak, weight
+
+def getAw_peak_lowest(Aw, D, tab):  
+    '''
+    find the position and weight of lowest peak of Aw, which might be highest
+    '''    
+    w_idx = 0
+    # go through the regime with Aw=0 (numerically ~1.e-6)
+    while Aw[w_idx]<1.e-3:
+        w_idx += 1
+    print 'Aw < 1.e-3 until ', w_vals[w_idx]
+
+    # go up until the peak:
+    while Aw[w_idx+1]>Aw[w_idx]:
+        w_idx += 1
+    w_peak = w_vals[w_idx]
+    print 'lowest peak at w = ', w_peak
+    
+    # find the area below the whole peak, namely the peak weight
+    # ==========================================================
+    # 1. first find the peak's w-range: [w_min, w_max]
+    wid = w_idx
+    while Aw[wid]>1.e-3:
+        #print w_vals[wid], Aw[wid]
+        if Aw[wid-1]>Aw[wid]:
+            break
+        wid -= 1
+    w_min = wid
+    
+    wid = w_idx
+    while Aw[wid]>1.e-3:
+        #print w_vals[wid], Aw[wid]
+        if Aw[wid+1]>Aw[wid]:
+            break
+        wid += 1
+    w_max = wid
+    
+    print 'lowest peak w-range = [', w_vals[w_min], w_vals[w_max], ']'
+    
+    # 2. Simpson's rule
+    weight = integrate.simps(Aw[w_min:w_max], w_vals[w_min:w_max])
+    print 'lowest peak, weight = ', w_peak, '  ', weight
+
+    return w_peak, weight
 
 def get_ground_state(matrix,S_val,Sz_val):  
     '''
@@ -232,40 +257,48 @@ def plot_atomic_multiplet_peaks(data_for_maxval):
     plt.plot(xx, yy,'--k', linewidth=0.5)
     #text(pam.E_3F-0.2, 11.4, 'E_3F', fontsize=5)
             
-def compute_Aw_others(pam_flag,ham_func,fig_name):
+def compute_Aw_others(H, pam_flag,ham_func,S_val,Sz_val,AorB_sym,fig_name,flowpeak,fname):
     if pam_flag == 1:
-        state_indices = ham_func(VS)
+        print 'compute ', fig_name
+        state_indices = ham_func(VS, S_val, Sz_val, AorB_sym)
+        print state_indices
 
         print "===================================="
-        clf()
+        plt.clf()
         Nstate = len(state_indices)
         for j in range(0,Nstate):
             index = state_indices[j]
-            Aw = getAw(H,index,VS,w_vals)           
+            Aw, w_peak, weight = getAw(H,index,VS,w_vals)           
 
             state = VS.get_state(VS.lookup_tbl[index])
-            s1 = state['hole1_spin']
-            s2 = state['hole2_spin']
             o1 = state['hole1_orb']
             o2 = state['hole2_orb']
             #subplot(Nstate,1,j+1)
-            plt.plot(w_vals, Aw, Ms[j], linewidth=1, label=tuple([s1,o1,s2,o2]))
+            plt.plot(w_vals, Aw, Ms[j], linewidth=1, label=o1+','+o2+',S='+str(S_val[index]))
 
+            # write lowest peak and G.S. energy data into file
+            if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
+                write_lowpeak(fig_name+flowpeak+'.txt',ep,tpd,w_peak, weight)
+
+            # write data into file for reusage
+            if pam.if_write_Aw==1:
+                write_Aw(fig_name+fname+'.txt', Aw)
+                
             maxval = max(Aw)
             #xlim([-5,20])
-            xlim([0,15])
-            #ylim([0,maxval])
-            ylim([0,0.5])
+            #xlim([0,15])
+            plt.ylim([0,maxval])
+            #plt.ylim([0,0.5])
             #ylabel('$A(\omega)$',fontsize=14)
             #text(0.45, 0.1, '(a)', fontsize=16)
-            grid('on',linestyle="--", linewidth=0.5, color='black', alpha=0.5)
-            legend(loc='best', fontsize=6.5, framealpha=1.0, edgecolor='black')
+            plt.grid('on',linestyle="--", linewidth=0.5, color='black', alpha=0.5)
+            plt.legend(loc='best', fontsize=6.5, framealpha=1.0, edgecolor='black')
             if j==0:
-                title(fname, fontsize=8)
+                plt.title(fname, fontsize=8)
             if j==Nstate-1:
-                xlabel('$\omega$',fontsize=15)
+                plt.xlabel('$\omega$',fontsize=15)
 
-        savefig(fig_name+fname+".pdf")
+        plt.savefig(fig_name+fname+".pdf")
 
 def checkU_unitary(U,U_d):
     UdU = U_d.dot(U)
@@ -331,14 +364,14 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
         Nstate = len(Aw_state_indices)
         for j in range(0,Nstate):
             index = Aw_state_indices[j]
-            Aw, w_peak, weight, w_peak2 = getAw(H,index,VS,w_vals)   
+            Aw, w_peak, weight = getAw(H,index,VS,w_vals)   
 
             # write lowest peak and G.S. energy data into file
             if pam.if_write_lowpeak_ep_tpd==1:
                 if pam.if_get_ground_state==1:
                     write_lowpeak_and_GS1(flowpeak,ep,tpd,w_peak,weight,vals[0])
                 else:
-                    write_lowpeak(flowpeak,ep,tpd,w_peak,weight,w_peak2)
+                    write_lowpeak(flowpeak,ep,tpd,w_peak,weight)
                 
             # write Aw data into file for reusage
             if pam.if_write_Aw==1:
@@ -377,10 +410,17 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
         #plt.plot(a[la/3:2*la/3-1,0], a[la/3:2*la/3-1,1], '--m', linewidth=1, label='dp, Matlab')
         #plt.plot(a[2*la/3:la-1,0], a[2*la/3:la-1,1], '--k', linewidth=1, label='pp, Matlab')
 
+        #########################################################################
+        # compute G_pp and plot
+        compute_Aw_others(H, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
+                          S_val, Sz_val, AorB_sym, "Aw_pp_", fname)
+
+        # compute G_Cu_O_dx2y2 and plot
+        compute_Aw_others(H, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
+                          S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", fname)
+
     elif Norb==7 or Norb==9:
-        if pam.symmetries==['ALL']:
-            # computing Aw for following symmetries:
-            symmetries = ['1A1']#,'3B1']#,'1B2','3B2']
+        if pam.interaction_sym==['ALL']:
             Hint, dd_state_indices = ham.create_interaction_matrix_ALL_syms(VS,d_double,p_double, \
                                                                     S_val, Sz_val,AorB_sym,Upp)
             H = H0_new + Hint  
@@ -389,9 +429,8 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
             # compute GS only for turning on full interactions
             if pam.if_get_ground_state==1:
                 vals, vecs = get_ground_state(H, S_val, Sz_val)
-        else:
-            symmetries = pam.symmetries
             
+        symmetries = pam.symmetries    
         Nsym = len(symmetries)
         for i in range(0,Nsym):
             sym = symmetries[i]
@@ -399,7 +438,7 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
             print "start computing A_dd(w) for sym", sym
             
             # if not 'ALL', then turn on interaction for each symmetry one by one
-            if pam.symmetries!=['ALL']:
+            if pam.interaction_sym!=['ALL']:
                 Hint, dd_state_indices = ham.create_interaction_matrix(VS,sym,d_double,p_double, \
                                                                    S_val, Sz_val, AorB_sym, Upp)
                 H = H0_new + Hint  
@@ -419,7 +458,7 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
             Aw_dd = np.zeros(len(w_vals))
         
             for index in dd_state_indices:      
-                Aw, w_peak, weight, w_peak2 = getAw(H,index,VS,w_vals)
+                Aw, w_peak, weight = getAw(H,index,VS,w_vals)
                 Aw_dd += Aw  #*coef_frac_parentage[spinorb]
                 #Aw_dGS += wgh_d*Aw
                 
@@ -428,7 +467,7 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
                 if pam.if_get_ground_state==1:
                     write_lowpeak_and_GS(flowpeak+'_'+sym+'.txt',ep,tpd,w_peak, weight,vals[0])
                 else:
-                    write_lowpeak(flowpeak+'_'+sym+'.txt',ep,tpd,w_peak, weight, w_peak2)
+                    write_lowpeak(flowpeak+'_'+sym+'.txt',ep,tpd,w_peak, weight)
                     
             # compute G_d_GS(sym) as in Eq.(13) in Eskes's PRB 1990 paper
             #Cu_dx2y2_O_indices = ham.get_Cu_dx2y2_O_indices(VS)
@@ -458,20 +497,34 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
             maxval = max(Aw_dd)
             #xlim([-5,20])
             #xlim([-7.5,13])
-            plt.ylim([0,0.1])
-            #plt.ylim([0,maxval])
+            #plt.ylim([0,0.5])
+            plt.ylim([0,maxval])
             #ylabel('$A(\omega)$',fontsize=17)
             #text(0.45, 0.1, '(a)', fontsize=16)
             #grid('on',linestyle="--", linewidth=0.5, color='black', alpha=0.5)
             plt.legend(loc='best', fontsize=9.5, framealpha=1.0, edgecolor='black')
             #yticks(fontsize=12) 
             
-        if pam.if_savefig_Aw==1:    
+        if Nsym>0 and pam.if_savefig_Aw==1:    
             plt.savefig("Aw_dd_"+fname+"_sym.pdf")
+
+        #########################################################################
+        # compute G_pp and plot
+        compute_Aw_others(H, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
+                          S_val, Sz_val, AorB_sym, "Aw_pp_", flowpeak, fname)
+
+        # compute G_dp and plot
+        compute_Aw_others(H, pam.if_compute_Aw_dp, ham.get_dp_state_indices, \
+                          S_val, Sz_val, AorB_sym, "Aw_dp_", flowpeak, fname)
+
+        # compute G_Cu_O_dx2y2 and plot
+        compute_Aw_others(H, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
+                          S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", flowpeak, fname)
+
         ############################################################
         # plot total Gdd
         if pam.if_compute_Aw_dd_total == 1:
-            clf()
+            plt.clf()
             plt.plot(w_vals, Aw_dd_total,'-b', linewidth=1)
             title(fname, fontsize=8)
             maxval = max(Aw_dd_total)
@@ -487,16 +540,6 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
             plot_atomic_multiplet_peaks(Aw_dd_total)
 
             savefig("Aw_dd_"+fname+"_total.pdf")
-    #########################################################################
-    # compute G_pp and plot
-    compute_Aw_others(pam.if_compute_Aw_pp, ham.get_pp_state_indices, "Aw_pp_")
-
-    # compute G_dp and plot
-    compute_Aw_others(pam.if_compute_Aw_dp, ham.get_dp_state_indices, "Aw_dp_")
-    
-    # compute G_Cu_O_dx2y2 and plot
-    compute_Aw_others(pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, "Aw_Cu_dx2y2_O_")
-    
 ##########################################################################
 if __name__ == '__main__': 
     if Norb==9:

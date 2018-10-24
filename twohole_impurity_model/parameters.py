@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 6
+Mc = 16
 ed = 0
-eps = np.arange(4, 4.9, 4.3) #[3.5]#,3.5,4.5]
+eps = np.arange(0.7, 0.711, 0.01) #[3.5]#,3.5,4.5]
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -18,8 +18,8 @@ eps = np.arange(4, 4.9, 4.3) #[3.5]#,3.5,4.5]
 #            hopping signs are considered in dispersion separately
 Norb = 7
 if Norb==3 or Norb==7:
-    tpds = [0.00001]  # for check_CuO4_eigenvalues.py
-    #tpds = [0.8] #np.arange(0.25, 0.4, 0.01)
+    #tpds = [0.00001]  # for check_CuO4_eigenvalues.py
+    tpds = [0.4] #np.arange(0.25, 0.4, 0.01)
     tpps = [0.55]
 elif Norb==9:
     pds = 1.5
@@ -31,20 +31,20 @@ elif Norb==9:
     #pps = 0.00001
     #ppp = 0.00001
 
-eta = 0.01
-w_start = -5.
-w_stop = 10.
-w_vals = np.arange(w_start,w_stop,eta/4.0)
+eta = 0.001
+w_start = -4.
+w_stop = 4.
+w_vals = np.arange(w_start,w_stop,eta)
 Lanczos_maxiter = 800
 
 basis_change_type = 'all_states' # 'all_states' or 'd_double'
 if_print_VS_after_basis_change = 0
 
-if_find_lowpeak = 0
+if_find_lowpeak = 1
 if if_find_lowpeak==1:
-    if_find_second_lowpeak = 1
+    peak_mode = 'lowest_peak' # 'lowest_peak' or 'highest_peak'
     if_write_lowpeak_ep_tpd = 1
-if_write_Aw = 0
+if_write_Aw = 1
 if_savefig_Aw = 1
 
 if_get_ground_state = 0
@@ -52,7 +52,7 @@ if if_get_ground_state==1:
     Neval = 1
 if_compute_Aw_dd_total = 0
 if_compute_Aw_pp = 0
-if_compute_Aw_dp = 1
+if_compute_Aw_dp = 0
 if_compute_Aw_Cu_dx2y2_O = 1
 
 if Norb==3:
@@ -84,8 +84,15 @@ Upps = [0]
 if Norb==3:
     Udd = 8.84  # A+4*B+3*C
 if Norb==7 or Norb==9:
-    symmetries = ['ALL']#,'3B1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
-    print "symmetries = ",symmetries
+    interaction_sym = ['ALL']#,'3B1']#,'1A2','3A2','1B1','3B1','1E','3E']#,'1B2','3B2']
+    print "turn on interactions for symmetries = ",interaction_sym
+    
+    if interaction_sym == ['ALL']:
+        symmetries = []
+    else:
+        symmetries = ['1A1']
+    print "compute A(w) for symmetries = ",symmetries
+    
     A = 6.5
     B = 0.15
     C = 0.58

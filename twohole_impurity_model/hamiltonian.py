@@ -121,9 +121,9 @@ def set_tpd_tpp(Norb,tpd,tpp,pds,pdp,pps,ppp):
     ########################## tpp below ##############################
     if pam.Norb==3 or pam.Norb==7:
         tpp_nn_hop_fac = {('UR','px','py'): -tpp,\
-                                 ('UL','px','py'):  tpp,\
-                                 ('DL','px','py'): -tpp,\
-                                 ('DR','px','py'):  tpp}
+                         ('UL','px','py'):  tpp,\
+                         ('DL','px','py'): -tpp,\
+                         ('DR','px','py'):  tpp}
     elif pam.Norb==9:
         tpp_nn_hop_fac = {('UR','px1','px2'):  0.5*(ppp-pps),\
                           ('UL','px1','px2'):  0.5*(ppp-pps),\
@@ -367,6 +367,14 @@ def create_tpd_nn_matrix(VS,tpd_nn_hop_dir, if_tpd_nn_hop, tpd_nn_hop_fac):
                         tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
                         new_state,ph = vs.make_state_canonical(tmp_state)
                                     
+                        s1n = new_state['hole1_spin']
+                        s2n = new_state['hole2_spin']
+                        orb1n = new_state['hole1_orb']
+                        orb2n = new_state['hole2_orb']
+                        x1n, y1n = new_state['hole1_coord']
+                        x2n, y2n = new_state['hole2_coord']
+                       # print x1,y1,orb1,s1,x2,y2,orb2,s2,'tpd hops to',x1n, y1n,orb1n,s1n,x2n, y2n,orb2n,s2n
+        
                         o12 = tuple([orb1, dir_, o1])
                         if o12 in tpd_orbs:
                             set_matrix_element(row,col,data,new_state,i,VS,tpd_nn_hop_fac[o12]*ph)
@@ -389,6 +397,14 @@ def create_tpd_nn_matrix(VS,tpd_nn_hop_dir, if_tpd_nn_hop, tpd_nn_hop_fac):
                     if vs.check_in_vs_condition(x1,y1,x2+vx,y2+vy):
                         tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
                         new_state,ph = vs.make_state_canonical(tmp_state)
+                        
+                        s1n = new_state['hole1_spin']
+                        s2n = new_state['hole2_spin']
+                        orb1n = new_state['hole1_orb']
+                        orb2n = new_state['hole2_orb']
+                        x1n, y1n = new_state['hole1_coord']
+                        x2n, y2n = new_state['hole2_coord']
+                        #print x1,y1,orb1,s1,x2,y2,orb2,s2,'tpd hops to',x1n, y1n,orb1n,s1n,x2n, y2n,orb2n,s2n
                         
                         o12 = tuple([orb2, dir_, o2])
                         if o12 in tpd_orbs:
@@ -444,6 +460,14 @@ def create_tpp_nn_matrix(VS,tpp_nn_hop_fac):
                     if vs.check_in_vs_condition(x1+vx,y1+vy,x2,y2):
                         tmp_state = vs.create_state(s1,o1,x1+vx,y1+vy,s2,orb2,x2,y2)
                         new_state,ph = vs.make_state_canonical(tmp_state)
+                        
+                        s1n = new_state['hole1_spin']
+                        s2n = new_state['hole2_spin']
+                        orb1n = new_state['hole1_orb']
+                        orb2n = new_state['hole2_orb']
+                        x1n, y1n = new_state['hole1_coord']
+                        x2n, y2n = new_state['hole2_coord']
+                        #print x1,y1,orb1,s1,x2,y2,orb2,s2,'tpp hops to',x1n, y1n,orb1n,s1n,x2n, y2n,orb2n,s2n
                                     
                         o12 = sorted([orb1, dir_, o1])
                         o12 = tuple(o12)
@@ -467,6 +491,14 @@ def create_tpp_nn_matrix(VS,tpp_nn_hop_fac):
                         tmp_state = vs.create_state(s1,orb1,x1,y1,s2,o2,x2+vx,y2+vy)
                         new_state,ph = vs.make_state_canonical(tmp_state)
 
+                        s1n = new_state['hole1_spin']
+                        s2n = new_state['hole2_spin']
+                        orb1n = new_state['hole1_orb']
+                        orb2n = new_state['hole2_orb']
+                        x1n, y1n = new_state['hole1_coord']
+                        x2n, y2n = new_state['hole2_coord']
+                        #print x1,y1,orb1,s1,x2,y2,orb2,s2,'tpp hops to',x1n, y1n,orb1n,s1n,x2n, y2n,orb2n,s2n
+                        
                         o12 = sorted([orb2, dir_, o2])
                         o12 = tuple(o12)
                         set_matrix_element(row,col,data,new_state,i,VS,tpp_nn_hop_fac[o12]*ph)
@@ -564,7 +596,7 @@ def get_double_occu_list(VS):
 
     print "len(d_list)", len(d_list), 'Nd=',Nd
     #print "len(p_list)", len(p_list), 'Np=',Np
-    assert len(d_list)==Nd
+    #assert len(d_list)==Nd
     #assert len(p_list)==Np
     
     return d_list, p_list
@@ -639,8 +671,10 @@ def create_interaction_matrix(VS,sym,d_double,p_double,S_val, Sz_val, AorB_sym, 
         # Note: for transformed basis of singlet/triplet
         # index can differ from that in original basis
         if 'dx2y2' in o12:
-            dd_state_indices.append(i)
-            print "dd_state_indices", i, ", state: S= ", S12, " Sz= ", Sz12, "orb= ", o1,o2
+            # for triplet, only need one Sz state; other Sz states have the same A(w)
+            if Sz12==0:
+                dd_state_indices.append(i)
+                print "dd_state_indices", i, ", state: S= ", S12, " Sz= ", Sz12, "orb= ", o1,o2
 
     # Create Upp matrix for p-orbital multiplets
     for i in p_double:
@@ -837,10 +871,10 @@ def get_dp_state_indices(VS, S_val, Sz_val, AorB_sym):
             # note that this only works if basis_change_type = 'all_states' instead of 'd_double' in parameters.py
             if S_val[i]==0:
                 dp_state_indices.append(i)
-                print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2,S_val[i],Sz_val[i]
+                #print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2,S_val[i],Sz_val[i]
             if S_val[i]==1 and Sz_val[i]==1:
                 dp_state_indices.append(i)
-                print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2,S_val[i],Sz_val[i]
+                #print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2,S_val[i],Sz_val[i]
     
     return dp_state_indices
 
@@ -869,9 +903,9 @@ def get_Cu_dx2y2_O_indices(VS, S_val, Sz_val, AorB_sym):
             # note that this only works if basis_change_type = 'all_states' instead of 'd_double' in parameters.py
             if S_val[i]==0:
                 Cu_dx2y2_O_indices.append(i)
-            if S_val[i]==1 and Sz_val[i]==1:
-                Cu_dx2y2_O_indices.append(i)
-            #print "dp_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2
+            #if S_val[i]==1 and Sz_val[i]==1:
+            #    Cu_dx2y2_O_indices.append(i)
+            #print "Cu_dx2y2_O_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2, 'S=',S_val[i],'Sz=',Sz_val[i]
             
     return Cu_dx2y2_O_indices
 
