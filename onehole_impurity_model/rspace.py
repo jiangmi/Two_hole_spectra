@@ -27,6 +27,19 @@ def get_index(i,j,orb):
     '''
     #print 'i=',i,'j=',j,'orb=',orb,'index=',orb+2*(j+M)+2*(2*M+1)*(i+M)
     # final 2 accounts for two d-orbitals because only two d-orb have tpd
+    
+    # debug:
+    '''
+    M = 16
+    idx = []
+    for i in range(-M,M+1):
+        for j in range(-M,M+1):   
+            for orb in range(0,2):
+                idx.append(orb+2*(j+M)+2*(2*M+1)*(i+M)+5)
+    idx.sort()
+    print 'all index',min(idx),max(idx),len(idx)
+    '''
+            
     return orb+2*(j+M)+2*(2*M+1)*(i+M)+5
 
 def create_static_eom_matrix(prm):
@@ -238,10 +251,9 @@ def create_static_eom_matrix(prm):
     row = np.array(row)
     col = np.array(col)
     data = np.array(data)
-    #dim = get_index(M,M,2)+1 # dimension of the matrix
-    dim = len(data)
+
+    dim  = get_index(M,M,1)+1
     print 'dim(H) = ', dim
-    
     static_eom_matrix = sps.coo_matrix((data,(row,col)),shape=(dim,dim))
     static_eom_matrix = static_eom_matrix.tocsr()
     static_eom_matrix.sort_indices()
@@ -309,11 +321,10 @@ def create_rhs_matrix():
     scipy.sparse.spsolve()
 
     '''
-    dim = get_index(M,M,6)+1
-    row = np.array([get_index(0,0,0), get_index(0,0,1), get_index(0,0,2), \
-                    get_index(0,0,3), get_index(0,0,4), get_index(0,0,5),get_index(0,0,6)])
-    col = np.array([0,1,2,3,4,5,6])
-    data = np.array([-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0],dtype='complex') 
-    rhs = sps.coo_matrix((data,(row,col)),shape=(dim,7))
+    dim = get_index(M,M,1)+1
+    row = np.array([0,1,2,3,4,get_index(0,0,0),get_index(0,0,1),get_index(10,10,0)])
+    col = np.array([0,1,2,3,4,5,6,7])
+    data = np.array([-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0],dtype='complex') 
+    rhs = sps.coo_matrix((data,(row,col)),shape=(dim,8))
     return rhs.tocsc()
     

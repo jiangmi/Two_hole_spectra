@@ -23,7 +23,6 @@ M_PI = math.pi
 Mc  = pam.Mc
 print 'Mc=',Mc
 
-w_vals = pam.w_vals
 Norb = pam.Norb
 eta = pam.eta
 ed  = pam.ed
@@ -44,7 +43,7 @@ elif Norb==7 or Norb==9:
 Ms = ['-b','-r','-g','-m','-c','-k','-y','--b','--r','--g','--m','--c','--k','--y',\
       '-.b','-.r','-.g','-.m','-.c','-.k','-.y',':b',':r',':g',':m',':c',':k',':y']
 #####################################
-def write_Aw(fname,Aw):
+def write_Aw(fname,Aw,w_vals):
     f = open('./data_Aw/'+fname,'w',1) 
     f.write('#omega\tspectral weight\n')
     for i in xrange(0,len(w_vals)):
@@ -85,15 +84,15 @@ def getAw(matrix,index,VS,w_vals):
         
     if pam.if_find_lowpeak==1:
         if pam.peak_mode=='highest_peak':
-            w_peak, weight = getAw_peak_highest(Aw, D, tab)
+            w_peak, weight = getAw_peak_highest(Aw, w_vals, D, tab)
         elif pam.peak_mode=='lowest_peak':
-            w_peak, weight = getAw_peak_lowest(Aw, D, tab)
+            w_peak, weight = getAw_peak_lowest(Aw, w_vals, D, tab)
     else:
         w_peak = 0.; weight = 0.
         
     return Aw, w_peak, weight
 
-def getAw_peak_highest(Aw, D, tab):  
+def getAw_peak_highest(Aw, w_vals, D, tab):  
     '''
     find the position and weight of highest peak of Aw, which might be lowest
     '''    
@@ -141,7 +140,7 @@ def getAw_peak_highest(Aw, D, tab):
     '''
     return w_peak, weight
 
-def getAw_peak_lowest(Aw, D, tab):  
+def getAw_peak_lowest(Aw, w_vals, D, tab):  
     '''
     find the position and weight of lowest peak of Aw, which might be highest
     '''    
@@ -257,7 +256,7 @@ def plot_atomic_multiplet_peaks(data_for_maxval):
     plt.plot(xx, yy,'--k', linewidth=0.5)
     #text(pam.E_3F-0.2, 11.4, 'E_3F', fontsize=5)
             
-def compute_Aw_others(H, pam_flag,ham_func,S_val,Sz_val,AorB_sym,fig_name,flowpeak,fname):
+def compute_Aw_others(H, w_vals, pam_flag,ham_func,S_val,Sz_val,AorB_sym,fig_name,flowpeak,fname):
     if pam_flag == 1:
         print 'compute ', fig_name
         state_indices = ham_func(VS, S_val, Sz_val, AorB_sym)
@@ -282,7 +281,7 @@ def compute_Aw_others(H, pam_flag,ham_func,S_val,Sz_val,AorB_sym,fig_name,flowpe
 
             # write data into file for reusage
             if pam.if_write_Aw==1:
-                write_Aw(fig_name+fname+'.txt', Aw)
+                write_Aw(fig_name+fname+'.txt', Aw, w_vals)
                 
             maxval = max(Aw)
             #xlim([-5,20])
@@ -328,6 +327,11 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
                   +'_A'+str(A)+'_B'+str(B)+'_C'+str(C) \
                   +'_Upp'+str(Upp)+'_Mc'+str(Mc)+'_Norb'+str(Norb)+'_eta'+str(eta)
                 
+    # set parameter dependent w_vals interval
+    w_start = ep-4.*tpp-2.
+    w_stop = ep-4.*tpp+0.2
+    w_vals = np.arange(w_start,w_stop,eta)
+    
     # set up H0
     tpd_nn_hop_dir, if_tpd_nn_hop, tpd_nn_hop_fac, tpp_nn_hop_fac = ham.set_tpd_tpp(Norb,tpd,tpp,0,0,0,0)
     T_pd  = ham.create_tpd_nn_matrix(VS,tpd_nn_hop_dir, if_tpd_nn_hop, tpd_nn_hop_fac)
@@ -375,7 +379,7 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
                 
             # write Aw data into file for reusage
             if pam.if_write_Aw==1:
-                write_Aw(fname+'.txt',Aw)
+                write_Aw(fname+'.txt',Aw,w_vals)
             
             state = VS.get_state(VS.lookup_tbl[index])
             s1 = state['hole1_spin']
@@ -412,11 +416,11 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
 
         #########################################################################
         # compute G_pp and plot
-        compute_Aw_others(H, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
+        compute_Aw_others(H, w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
                           S_val, Sz_val, AorB_sym, "Aw_pp_", fname)
 
         # compute G_Cu_O_dx2y2 and plot
-        compute_Aw_others(H, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
+        compute_Aw_others(H, w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
                           S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", fname)
 
     elif Norb==7 or Norb==9:
@@ -480,7 +484,7 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
             
             # write data into file for reusage
             if pam.if_write_Aw==1:
-                write_Aw(fname+'_'+sym+'.txt', Aw_dd)
+                write_Aw(fname+'_'+sym+'.txt', Aw_dd, w_vals)
               
             plt.subplot(Nsym,1,i+1)
             plt.plot(w_vals, Aw_dd, Ms[i], linewidth=1, label=sym)
@@ -510,15 +514,15 @@ def compute_Aw_main(ep,tpd,tpp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
 
         #########################################################################
         # compute G_pp and plot
-        compute_Aw_others(H, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
+        compute_Aw_others(H, w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
                           S_val, Sz_val, AorB_sym, "Aw_pp_", flowpeak, fname)
 
         # compute G_dp and plot
-        compute_Aw_others(H, pam.if_compute_Aw_dp, ham.get_dp_state_indices, \
+        compute_Aw_others(H, w_vals, pam.if_compute_Aw_dp, ham.get_dp_state_indices, \
                           S_val, Sz_val, AorB_sym, "Aw_dp_", flowpeak, fname)
 
         # compute G_Cu_O_dx2y2 and plot
-        compute_Aw_others(H, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
+        compute_Aw_others(H, w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
                           S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", flowpeak, fname)
 
         ############################################################
