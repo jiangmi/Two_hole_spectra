@@ -210,8 +210,13 @@ class VariationalSpace:
                                 for s1 in ['up','dn']:
                                     for s2 in ['up','dn']:   
                                         # try screen out same spin states
-                                        #if s1==s2:
-                                        #    continue
+                                        if pam.VS_only_up_dn==1:
+                                            if s1==s2:
+                                                continue
+                                        # try only keep Sz=1 triplet states
+                                        if pam.VS_only_up_up==1:
+                                            if not s1==s2=='up':
+                                                continue
 
                                         # consider Pauli principle
                                         if s1==s2 and orb1==orb2 and ux==vx and uy==vy:

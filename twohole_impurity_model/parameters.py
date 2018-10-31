@@ -2,9 +2,9 @@ import math
 import numpy as np
 M_PI = math.pi
 
-Mc = 6
+Mc = 3
 ed = 0
-eps = np.arange(5.0, 5.01, 0.01) #[3.5]#,3.5,4.5]
+eps = np.arange(4.0, 4.01, 0.5) #[3.5]#,3.5,4.5]
 
 # Note: tpd and tpp are only amplitude signs are considered separately in hamiltonian.py
 # Slater Koster integrals and the overlaps between px and d_x^2-y^2 is sqrt(3) bigger than between px and d_3x^2-r^2 
@@ -16,39 +16,43 @@ eps = np.arange(5.0, 5.01, 0.01) #[3.5]#,3.5,4.5]
 
 # IMPORTANT: keep all hoppings below positive to avoid confusion
 #            hopping signs are considered in dispersion separately
-Norb = 7
+Norb = 9
 if Norb==3 or Norb==7:
     #tpds = [0.00001]  # for check_CuO4_eigenvalues.py
     tpds = [0.4] #np.arange(0.25, 0.4, 0.01)
     tpps = [0.55]
-elif Norb==9:
-    pds = 1.5
-    pdp = 0.7
-    #pds = 0.00001
-    #pdp = 0.00001
-    pps = 1.0
+elif Norb==9:    
+    pdss = [1.5]
+    pdps = [0.7]
+    pdss = [0.00001]
+    pdps = [0.00001]
+    pps = 1.7
     ppp = 0.3
     #pps = 0.00001
     #ppp = 0.00001
 
-eta = 0.001
+eta = 0.1
 Lanczos_maxiter = 800
+
+# restriction on variational space
+VS_only_up_up = 0
+VS_only_up_dn = 0
 
 basis_change_type = 'all_states' # 'all_states' or 'd_double'
 if_print_VS_after_basis_change = 0
 
-if_find_lowpeak = 1
+if_find_lowpeak = 0
 if if_find_lowpeak==1:
     peak_mode = 'lowest_peak' # 'lowest_peak' or 'highest_peak'
     if_write_lowpeak_ep_tpd = 1
 if_write_Aw = 0
-if_savefig_Aw = 0
+if_savefig_Aw = 1
 
 if_get_ground_state = 0
 if if_get_ground_state==1:
     Neval = 1
 if_compute_Aw_dd_total = 0
-if_compute_Aw_pp = 1
+if_compute_Aw_pp = 0
 if_compute_Aw_dp = 0
 if_compute_Aw_Cu_dx2y2_O = 1
 
@@ -85,7 +89,7 @@ if Norb==7 or Norb==9:
     print "turn on interactions for symmetries = ",interaction_sym
     
     if interaction_sym == ['ALL']:
-        symmetries = []
+        symmetries = ['1A1','3B1']
     else:
         symmetries = ['1A1']
     print "compute A(w) for symmetries = ",symmetries
@@ -93,9 +97,9 @@ if Norb==7 or Norb==9:
     A = 6.5
     B = 0.15
     C = 0.58
-    A = 50
-    B = 0
-    C = 0
+    #A = 50
+    #B = 0
+    #C = 0
     E_1S = A+14*B+7*C
     E_1G = A+4*B+2*C
     E_1D = A-3*B+2*C

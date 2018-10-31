@@ -73,20 +73,20 @@ def set_tpd_tpp(Norb,tpd,tpp,pds,pdp,pps,ppp):
                           ('py','D','dx2y2'):   tpd,\
                           ('py','U','dx2y2'):  -tpd}
     elif pam.Norb==7:
-        # d3z2r2 has +,-,+ sign structure so that it is negative in x-y plane
-        tpd_nn_hop_fac = {('d3z2r2','L','px'): -tpd/np.sqrt(3),\
-                          ('d3z2r2','R','px'):  tpd/np.sqrt(3),\
-                          ('d3z2r2','U','py'):  tpd/np.sqrt(3),\
-                          ('d3z2r2','D','py'): -tpd/np.sqrt(3),\
+        # d3z2r2 has -,+,- sign structure so that it is negative in x-y plane
+        tpd_nn_hop_fac = {('d3z2r2','L','px'):  tpd/np.sqrt(3),\
+                          ('d3z2r2','R','px'): -tpd/np.sqrt(3),\
+                          ('d3z2r2','U','py'): -tpd/np.sqrt(3),\
+                          ('d3z2r2','D','py'):  tpd/np.sqrt(3),\
                           ('dx2y2','L','px'):   tpd,\
                           ('dx2y2','R','px'):  -tpd,\
                           ('dx2y2','U','py'):   tpd,\
                           ('dx2y2','D','py'):  -tpd,\
                           # below just inverse dir of the above one by one
-                          ('px','R','d3z2r2'): -tpd/np.sqrt(3),\
-                          ('px','L','d3z2r2'):  tpd/np.sqrt(3),\
-                          ('py','D','d3z2r2'):  tpd/np.sqrt(3),\
-                          ('py','U','d3z2r2'): -tpd/np.sqrt(3),\
+                          ('px','R','d3z2r2'):  tpd/np.sqrt(3),\
+                          ('px','L','d3z2r2'): -tpd/np.sqrt(3),\
+                          ('py','D','d3z2r2'): -tpd/np.sqrt(3),\
+                          ('py','U','d3z2r2'):  tpd/np.sqrt(3),\
                           ('px','R','dx2y2'):   tpd,\
                           ('px','L','dx2y2'):  -tpd,\
                           ('py','D','dx2y2'):   tpd,\
@@ -903,8 +903,8 @@ def get_Cu_dx2y2_O_indices(VS, S_val, Sz_val, AorB_sym):
             # note that this only works if basis_change_type = 'all_states' instead of 'd_double' in parameters.py
             if S_val[i]==0:
                 Cu_dx2y2_O_indices.append(i)
-            #if S_val[i]==1 and Sz_val[i]==1:
-            #    Cu_dx2y2_O_indices.append(i)
+            if S_val[i]==1 and Sz_val[i]==1:
+                Cu_dx2y2_O_indices.append(i)
             #print "Cu_dx2y2_O_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2, 'S=',S_val[i],'Sz=',Sz_val[i]
             
     return Cu_dx2y2_O_indices

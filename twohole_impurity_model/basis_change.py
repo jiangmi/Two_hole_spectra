@@ -32,7 +32,7 @@ def count_VS(VS):
         count_upup, count_updn, count_dnup, count_dndn
     
     # only correct in most times, not mandatory
-    assert(count_upup==count_dndn)
+    #assert(count_upup==count_dndn)
     
     return count_upup, count_updn, count_dnup, count_dndn
             
