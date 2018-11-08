@@ -903,7 +903,7 @@ def get_Cu_dx2y2_O_indices(VS, S_val, Sz_val, AorB_sym):
             # note that this only works if basis_change_type = 'all_states' instead of 'd_double' in parameters.py
             if S_val[i]==0:
                 Cu_dx2y2_O_indices.append(i)
-            if S_val[i]==1 and Sz_val[i]==1:
+            if S_val[i]==1 and Sz_val[i]==0:
                 Cu_dx2y2_O_indices.append(i)
             #print "Cu_dx2y2_O_state_indices", i, ", state: ", s1,o1,x1,y1,s2,o2,x2,y2, 'S=',S_val[i],'Sz=',Sz_val[i]
             

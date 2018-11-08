@@ -6,6 +6,8 @@ import scipy.sparse as sps
 import scipy.sparse.linalg
 from scipy import integrate
 import sys
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
 import parameters as pam
@@ -88,8 +90,10 @@ def getAw(matrix,index,VS,w_vals):
     if pam.if_find_lowpeak==1:
         if pam.peak_mode=='highest_peak':
             w_peak, weight = getAw_peak_highest(Aw, w_vals, D, tab)
+            #w_peak = getAw_peak_highest(Aw, w_vals, D, tab)
         elif pam.peak_mode=='lowest_peak':
             w_peak, weight = getAw_peak_lowest(Aw, w_vals, D, tab)
+            #w_peak = getAw_peak_lowest(Aw, w_vals, D, tab)
     else:
         w_peak = 0.; weight = 0.
         
@@ -104,6 +108,7 @@ def getAw_peak_highest(Aw, w_vals, D, tab):
     w_peak = w_vals[w_idx]
     print 'highest peak at w = ', w_peak
     
+    #'''
     # find the area below the whole peak, namely the peak weight
     # ==========================================================
     # 1. first find the peak's w-range: [w_min, w_max]
@@ -128,7 +133,7 @@ def getAw_peak_highest(Aw, w_vals, D, tab):
     # 2. Simpson's rule
     weight = integrate.simps(Aw[w_min:w_max], w_vals[w_min:w_max])
     print 'highest peak, weight = ', w_peak, '  ', weight
-    
+    #'''
     '''
     # find the eigenvalue D[n] nearest to w_peak so that its index n
     # leads to weight = tab[n]; Note that this weight is actually for 
@@ -159,6 +164,7 @@ def getAw_peak_lowest(Aw, w_vals, D, tab):
     w_peak = w_vals[w_idx]
     print 'lowest peak at w = ', w_peak
     
+    #'''
     # find the area below the whole peak, namely the peak weight
     # ==========================================================
     # 1. first find the peak's w-range: [w_min, w_max]
@@ -183,6 +189,7 @@ def getAw_peak_lowest(Aw, w_vals, D, tab):
     # 2. Simpson's rule
     weight = integrate.simps(Aw[w_min:w_max], w_vals[w_min:w_max])
     print 'lowest peak, weight = ', w_peak, '  ', weight
+    #'''
 
     return w_peak, weight
 
@@ -203,11 +210,12 @@ def get_ground_state(matrix,S_val,Sz_val):
     # in case eigsh works:
     Neval = pam.Neval
     vals, vecs = sps.linalg.eigsh(matrix, k=Neval, which='SA')
+    vals.sort()
     print 'lowest eigenvalue of H = '
     print vals
     
     # get state components in GS and another 9 higher states; note that indices is a tuple
-    for k in xrange(0,Neval):
+    for k in xrange(0,1):
         #if vals[k]<pam.w_start or vals[k]>pam.w_stop:
         #if vals[k]<11.5 or vals[k]>14.5:
         #if k<Neval:
@@ -283,7 +291,7 @@ def compute_Aw_others(H,ep,tpd,pds,pdp,w_vals, pam_flag,ham_func,S_val,Sz_val,Ao
                 if Norb==3 or Norb==7:
                     write_lowpeak(fig_name+flowpeak+'.txt',ep,tpd,w_peak, weight)
                 elif Norb==9:
-                    write_lowpeak2(fig_name+flowpeak+'.txt',pds,pdp,tpd,w_peak, weight)
+                    write_lowpeak2(fig_name+flowpeak+'.txt',ep,pds,pdp,w_peak, weight)
 
             # write data into file for reusage
             if pam.if_write_Aw==1:
@@ -329,15 +337,28 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
         flowpeak = 'Norb'+str(Norb)+'_tpp'+str(tpp)+'_A'+str(A)+'_B'+str(B)+'_C'+str(C)+'_Upp'+str(Upp)+ \
                    '_Mc'+str(Mc)+'_eta'+str(eta)
     elif Norb==9:
-        fname = 'ep'+str(ep)+'_pds'+str(pds)+'_pdp'+str(pdp)+'_pps'+str(pps)+'_ppp'+str(ppp) \
+        fname = 'ep'+str(ep)+'_pdp'+str(pdp)+'_pps'+str(pps)+'_ppp'+str(ppp) \
                   +'_A'+str(A)+'_B'+str(B)+'_C'+str(C) \
                   +'_Upp'+str(Upp)+'_Mc'+str(Mc)+'_Norb'+str(Norb)+'_eta'+str(eta)
         flowpeak = 'Norb'+str(Norb)+'_pps'+str(pps)+'_ppp'+str(ppp)+'_A'+str(A)+'_B'+str(B)+'_C'+str(C)+ \
                  '_Upp'+str(Upp)+'_Mc'+str(Mc)+'_eta'+str(eta)
                 
     # set parameter dependent w_vals interval
-    w_start = ep-4.*tpp-5.
-    w_stop = ep-4.*tpp+5
+    # at tpd=0, d9L minimum is at ep-4.*tpp while d10L2 continuum minimum is at 2.*ep-8.*tpp
+    # when ep>4*tpp, d9L is lower
+    if Norb==3 or Norb==7:
+        if ep>4.*tpp:
+            val = ep-4.*tpp
+        else:
+            val = 2.*ep-8.*tpp
+    elif Norb==9:
+        if ep>2.*(pps+ppp):
+            val = ep-2.*(pps+ppp)
+        else:
+            val = 2.*ep-4.*(pps+ppp)
+            
+    w_start = val-3.5
+    w_stop = val+3.5
     w_vals = np.arange(w_start,w_stop,eta)
 
     # set up H0
@@ -365,7 +386,7 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
     plt.clf()
     #======================= start opt for Norb=3 or 7, 9 ======================================
     if Norb==3:
-        Hint, Aw_state_indices = ham.create_interaction_matrix_Norb3(VS,d_double,p_double,Upp)
+        Hint, dd_state_indices = ham.create_interaction_matrix_Norb3(VS,d_double,p_double,Upp)
         H = H0_new + Hint
         H.tocsr()
         
@@ -377,17 +398,14 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
         #out_mat = H.todense()
         #assert(ham.check_hermitian(out_mat)==True)
         
-        Nstate = len(Aw_state_indices)
+        Nstate = len(dd_state_indices)
         for j in range(0,Nstate):
-            index = Aw_state_indices[j]
+            index = dd_state_indices[j]
             Aw, w_peak, weight = getAw(H,index,VS,w_vals)   
-
-            # write lowest peak and G.S. energy data into file
-            #if pam.if_write_lowpeak_ep_tpd==1:
-            #    if pam.if_get_ground_state==1:
-            #        write_lowpeak_and_GS1(flowpeak,ep,tpd,w_peak,weight,vals[0])
-            #    else:
-            #        write_lowpeak(flowpeak,ep,tpd,w_peak,weight)
+            
+            # write lowest peak data into file
+            if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
+                write_lowpeak(flowpeak+'.txt',ep,tpd,w_peak, weight)
                 
             # write Aw data into file for reusage
             if pam.if_write_Aw==1:
@@ -404,19 +422,19 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
 
             maxval = max(Aw)
             #xlim([-5,20])
-            #ylim([0,maxval])
+            plt.ylim([0,maxval])
             #ylim([0,0.5])
             #ylabel('$A(\omega)$',fontsize=14)
             #text(0.45, 0.1, '(a)', fontsize=16)
-            grid('on',linestyle="--", linewidth=0.5, color='black', alpha=0.5)
-            legend(loc='best', fontsize=6.5, framealpha=1.0, edgecolor='black')
+            plt.grid('on',linestyle="--", linewidth=0.5, color='black', alpha=0.5)
+            plt.legend(loc='best', fontsize=6.5, framealpha=1.0, edgecolor='black')
             if j==0:
-                title(fname, fontsize=8)
+                plt.title(fname, fontsize=8)
             if j==Nstate-1:
-                xlabel('$\omega$',fontsize=15)
+                plt.xlabel('$\omega$',fontsize=15)
 
         if pam.if_savefig_Aw==1:
-            savefig("Aw_"+fname+".pdf")
+            plt.savefig("Aw_dd_"+fname+".pdf")
 
         # plot Matlab data for comparison
         #a = np.loadtxt('../data/dataMatlab.txt',skiprows=1)
@@ -429,11 +447,11 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
         #########################################################################
         # compute G_pp and plot
         compute_Aw_others(H, ep,tpd, 0,0,w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
-                          S_val, Sz_val, AorB_sym, "Aw_pp_", fname)
+                          S_val, Sz_val, AorB_sym, "Aw_pp_", flowpeak, fname)
 
         # compute G_Cu_O_dx2y2 and plot
         compute_Aw_others(H, ep,tpd, 0,0,w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
-                          S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", fname)
+                          S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", flowpeak, fname)
         
     elif Norb==7 or Norb==9:
         if pam.interaction_sym==['ALL']:
@@ -483,7 +501,10 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
                 
                 # write lowest peak data into file
                 if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
-                    write_lowpeak(flowpeak+'_'+sym+'.txt',ep,tpd,w_peak, weight)
+                    if Norb==7:
+                        write_lowpeak(flowpeak+'_'+sym+'.txt',ep,tpd,w_peak, weight)
+                    elif Norb==9:
+                        write_lowpeak2(flowpeak+'_'+sym+'.txt',ep,pds,pdp,w_peak, weight)
                           
             # write data into file for reusage
             if pam.if_write_Aw==1:
@@ -583,7 +604,7 @@ if __name__ == '__main__':
     # check if U if unitary
     #checkU_unitary(U,U_d)
     
-    if Norb==7:
+    if Norb==3 or Norb==7:
         for ep in pam.eps:
             for tpd in pam.tpds:
                 for tpp in pam.tpps:

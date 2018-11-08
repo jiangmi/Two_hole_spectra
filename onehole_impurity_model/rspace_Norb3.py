@@ -39,8 +39,9 @@ def get_index(i,j,orb):
     idx.sort()
     print 'all index',min(idx),max(idx),len(idx)
     '''
-            
-    return orb+2*(j+M)+2*(2*M+1)*(i+M)+5
+    # offset = 5 for Norb=7 and =3 for Norb=3
+    offset = 1
+    return orb+2*(j+M)+2*(2*M+1)*(i+M)+offset 
 
 def create_static_eom_matrix(prm):
     '''The static eom matrix for the real-space GFs does not depend on
@@ -78,6 +79,7 @@ def create_static_eom_matrix(prm):
     '''
 
     # unpack parameters
+    Norb = prm.Norb
     tpd = prm.tpd
     tpp = prm.tpp
     eps_d = prm.eps_d
@@ -90,52 +92,10 @@ def create_static_eom_matrix(prm):
     
     # first set up the impurity Cu's hoppings separately
     # only the tpd part of H
-    #===================================================
-    # orb = d3z2r2
-    row_index = 0
-    # diagonal
-    row.append(row_index)
-    col.append(row_index)
-    data.append(-eta*(1j)+eps_d)
-    # hop left
-    val = -tpd/np.sqrt(3)
-    if val != 0.0:
-        row.append(row_index)
-        col.append(get_index(1,0,0))
-        data.append(val)
-        row.append(get_index(1,0,0))
-        col.append(row_index)
-        data.append(val)
-    # hop right
-    val = tpd/np.sqrt(3)
-    if val != 0.0:
-        row.append(row_index)
-        col.append(get_index(0,0,0))
-        data.append(val)
-        row.append(get_index(0,0,0))
-        col.append(row_index)
-        data.append(val)
-    # hop up
-    val = tpd/np.sqrt(3)
-    if val != 0.0:
-        row.append(row_index)
-        col.append(get_index(0,0,1))
-        data.append(val)
-        row.append(get_index(0,0,1))
-        col.append(row_index)
-        data.append(val)
-    # hop down
-    val = -tpd/np.sqrt(3)
-    if val != 0.0:
-        row.append(row_index)
-        col.append(get_index(0,1,1))
-        data.append(val)
-        row.append(get_index(0,1,1))
-        col.append(row_index)
-        data.append(val)
-    #-------------------------------------------------       
+    #===================================================  
     # orb = dx2y2
-    row_index = 1
+    print 'set tpd for dx2y2'
+    row_index = 0
     # diagonal
     row.append(row_index)
     col.append(row_index)
