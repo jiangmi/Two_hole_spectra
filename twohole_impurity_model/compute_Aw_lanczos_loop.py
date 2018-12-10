@@ -30,7 +30,6 @@ ed  = pam.ed
 if Norb==3:
     Udd = pam.Udd
 elif Norb==7 or Norb==9:
-    A = pam.A
     B = pam.B
     C = pam.C
                     
@@ -43,29 +42,29 @@ def write_Aw(fname,Aw,w_vals):
     for i in xrange(0,len(w_vals)):
         f.write('{:.6e}\t{:.6e}\n'.format(float(w_vals[i]),Aw[i]))
         
-def write_GS(fname,ep,tpd,Egs):
+def write_GS(fname,A,ep,tpd,Egs):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_GS/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\n'.format(ep,tpd,Egs))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,tpd,Egs))
     
-def write_GS2(fname,ep,pds,pdp,Egs):
+def write_GS2(fname,A,ep,pds,pdp,Egs):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_GS/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(ep,pds,pdp,Egs))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,pds,pdp,Egs))
     
-def write_lowpeak(fname,ep,tpd,w_peak,weight):
+def write_lowpeak(fname,A,ep,tpd,w_peak,weight):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_lowpeak/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(ep,tpd,w_peak,weight))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,tpd,w_peak,weight))
     
-def write_lowpeak2(fname,ep,pds,pdp,w_peak,weight):
+def write_lowpeak2(fname,A,ep,pds,pdp,w_peak,weight):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_lowpeak/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(ep,pds,pdp,w_peak,weight))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,pds,pdp,w_peak,weight))
     
 def getAw(matrix,index,VS,w_vals):  
     # set up Lanczos solver
@@ -267,7 +266,7 @@ def plot_atomic_multiplet_peaks(data_for_maxval):
     plt.plot(xx, yy,'--k', linewidth=0.5)
     #text(pam.E_3F-0.2, 11.4, 'E_3F', fontsize=5)
             
-def compute_Aw_others(H,ep,tpd,pds,pdp,w_vals, pam_flag,ham_func,S_val,Sz_val,AorB_sym,fig_name,flowpeak,fname):
+def compute_Aw_others(H,A,ep,tpd,pds,pdp,w_vals, pam_flag,ham_func,S_val,Sz_val,AorB_sym,fig_name,flowpeak,fname):
     if pam_flag == 1:
         print 'compute ', fig_name
         state_indices = ham_func(VS, S_val, Sz_val, AorB_sym)
@@ -289,9 +288,9 @@ def compute_Aw_others(H,ep,tpd,pds,pdp,w_vals, pam_flag,ham_func,S_val,Sz_val,Ao
             # write lowest peak data into file
             if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
                 if Norb==3 or Norb==7:
-                    write_lowpeak(fig_name+flowpeak+'.txt',ep,tpd,w_peak, weight)
+                    write_lowpeak(fig_name+flowpeak+'.txt',A,ep,tpd,w_peak, weight)
                 elif Norb==9:
-                    write_lowpeak2(fig_name+flowpeak+'.txt',ep,pds,pdp,w_peak, weight)
+                    write_lowpeak2(fig_name+flowpeak+'.txt',A,ep,pds,pdp,w_peak, weight)
 
             # write data into file for reusage
             if pam.if_write_Aw==1:
@@ -325,7 +324,7 @@ def checkU_unitary(U,U_d):
             if tmp[ii,jj]>1.e-10:
                 print tmp[ii,jj]
                 
-def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym): 
+def compute_Aw_main(A,ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym): 
     if Norb==3:
         fname = 'ep'+str(ep)+'_tpd'+str(tpd)+'_tpp'+str(tpp)+ \
                     '_Udd'+str(Udd)+'_Upp'+str(Upp)+'_Mc'+str(Mc)+'_Norb'+str(Norb)+'_eta'+str(eta)
@@ -334,13 +333,13 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
         fname = 'ep'+str(ep)+'_tpd'+str(tpd)+'_tpp'+str(tpp) \
                   +'_A'+str(A)+'_B'+str(B)+'_C'+str(C) \
                   +'_Upp'+str(Upp)+'_Mc'+str(Mc)+'_Norb'+str(Norb)+'_eta'+str(eta)
-        flowpeak = 'Norb'+str(Norb)+'_tpp'+str(tpp)+'_A'+str(A)+'_B'+str(B)+'_C'+str(C)+'_Upp'+str(Upp)+ \
+        flowpeak = 'Norb'+str(Norb)+'_tpp'+str(tpp)+'_B'+str(B)+'_C'+str(C)+'_Upp'+str(Upp)+ \
                    '_Mc'+str(Mc)+'_eta'+str(eta)
     elif Norb==9:
         fname = 'ep'+str(ep)+'_pdp'+str(pdp)+'_pps'+str(pps)+'_ppp'+str(ppp) \
                   +'_A'+str(A)+'_B'+str(B)+'_C'+str(C) \
                   +'_Upp'+str(Upp)+'_Mc'+str(Mc)+'_Norb'+str(Norb)+'_eta'+str(eta)
-        flowpeak = 'Norb'+str(Norb)+'_pps'+str(pps)+'_ppp'+str(ppp)+'_A'+str(A)+'_B'+str(B)+'_C'+str(C)+ \
+        flowpeak = 'Norb'+str(Norb)+'_pps'+str(pps)+'_ppp'+str(ppp)+'_B'+str(B)+'_C'+str(C)+ \
                  '_Upp'+str(Upp)+'_Mc'+str(Mc)+'_eta'+str(eta)
                 
     # set parameter dependent w_vals interval
@@ -392,7 +391,7 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
         
         if pam.if_get_ground_state==1:
             vals, vecs = get_ground_state(H, S_val, Sz_val)
-            write_GS('Egs_'+flowpeak+'.txt',ep,tpd,vals[0])
+            write_GS('Egs_'+flowpeak+'.txt',0,ep,tpd,vals[0])
             
         # For debug: check if H is hermitian: only practical for small Mc, namely small matrix
         #out_mat = H.todense()
@@ -405,7 +404,7 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
             
             # write lowest peak data into file
             if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
-                write_lowpeak(flowpeak+'.txt',ep,tpd,w_peak, weight)
+                write_lowpeak(flowpeak+'.txt',0,ep,tpd,w_peak, weight)
                 
             # write Aw data into file for reusage
             if pam.if_write_Aw==1:
@@ -446,17 +445,17 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
 
         #########################################################################
         # compute G_pp and plot
-        compute_Aw_others(H, ep,tpd, 0,0,w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
+        compute_Aw_others(H, 0,ep,tpd, 0,0,w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
                           S_val, Sz_val, AorB_sym, "Aw_pp_", flowpeak, fname)
 
         # compute G_Cu_O_dx2y2 and plot
-        compute_Aw_others(H, ep,tpd, 0,0,w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
+        compute_Aw_others(H, 0,ep,tpd, 0,0,w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
                           S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", flowpeak, fname)
         
     elif Norb==7 or Norb==9:
         if pam.interaction_sym==['ALL']:
             Hint, dd_state_indices = ham.create_interaction_matrix_ALL_syms(VS,d_double,p_double, \
-                                                                    S_val, Sz_val,AorB_sym,Upp)
+                                                                    S_val, Sz_val,AorB_sym,A,Upp)
             H = H0_new + Hint  
             H.tocsr()
             
@@ -464,9 +463,9 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
             if pam.if_get_ground_state==1:
                 vals, vecs = get_ground_state(H, S_val, Sz_val)
                 if Norb==7:
-                    write_GS('Egs_'+flowpeak+'.txt',ep,tpd,vals[0])
+                    write_GS('Egs_'+flowpeak+'.txt',A,ep,tpd,vals[0])
                 elif Norb==9:
-                    write_GS2('Egs_'+flowpeak+'.txt',ep,pds,pdp,vals[0])
+                    write_GS2('Egs_'+flowpeak+'.txt',A,ep,pds,pdp,vals[0])
             
         symmetries = pam.symmetries    
         Nsym = len(symmetries)
@@ -478,12 +477,12 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
             # if not 'ALL', then turn on interaction for each symmetry one by one
             if pam.interaction_sym!=['ALL']:
                 Hint, dd_state_indices = ham.create_interaction_matrix(VS,sym,d_double,p_double, \
-                                                                   S_val, Sz_val, AorB_sym, Upp)
+                                                                   S_val, Sz_val, AorB_sym, A, Upp)
                 H = H0_new + Hint  
                 H.tocsr()
             else:
                 _, dd_state_indices = ham.create_interaction_matrix(VS,sym,d_double,p_double, \
-                                                                   S_val, Sz_val, AorB_sym, Upp)
+                                                                   S_val, Sz_val, AorB_sym, A, Upp)
                 
             #dd_states, d8_states, coef_frac_parentage = ham.get_Aw_state(sym)
             
@@ -502,9 +501,9 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
                 # write lowest peak data into file
                 if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
                     if Norb==7:
-                        write_lowpeak(flowpeak+'_'+sym+'.txt',ep,tpd,w_peak, weight)
+                        write_lowpeak(flowpeak+'_'+sym+'.txt',A,ep,tpd,w_peak, weight)
                     elif Norb==9:
-                        write_lowpeak2(flowpeak+'_'+sym+'.txt',ep,pds,pdp,w_peak, weight)
+                        write_lowpeak2(flowpeak+'_'+sym+'.txt',A,ep,pds,pdp,w_peak, weight)
                           
             # write data into file for reusage
             if pam.if_write_Aw==1:
@@ -540,29 +539,29 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
             plt.savefig("Aw_dd_"+fname+"_sym.pdf")
             
         #########################################################################
-        if Norb==3 or Norb==7:
+        if Norb==7:
             # compute G_pp and plot
-            compute_Aw_others(H, ep,tpd,0,0,w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
+            compute_Aw_others(H, A,ep,tpd,0,0,w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
                               S_val, Sz_val, AorB_sym, "Aw_pp_", flowpeak, fname)
 
             # compute G_dp and plot
-            compute_Aw_others(H, ep,tpd,0,0,w_vals, pam.if_compute_Aw_dp, ham.get_dp_state_indices, \
+            compute_Aw_others(H, A,ep,tpd,0,0,w_vals, pam.if_compute_Aw_dp, ham.get_dp_state_indices, \
                               S_val, Sz_val, AorB_sym, "Aw_dp_", flowpeak, fname)
 
             # compute G_Cu_O_dx2y2 and plot
-            compute_Aw_others(H, ep,tpd,0,0,w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
+            compute_Aw_others(H, A,ep,tpd,0,0,w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
                               S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", flowpeak, fname)
         elif Norb==9:
             # compute G_pp and plot
-            compute_Aw_others(H, ep,0, pds,pdp, w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
+            compute_Aw_others(H, A,ep,0, pds,pdp, w_vals, pam.if_compute_Aw_pp, ham.get_pp_state_indices, \
                               S_val, Sz_val, AorB_sym, "Aw_pp_", flowpeak, fname)
 
             # compute G_dp and plot
-            compute_Aw_others(H, ep,0, pds,pdp, w_vals, pam.if_compute_Aw_dp, ham.get_dp_state_indices, \
+            compute_Aw_others(H, A,ep,0, pds,pdp, w_vals, pam.if_compute_Aw_dp, ham.get_dp_state_indices, \
                               S_val, Sz_val, AorB_sym, "Aw_dp_", flowpeak, fname)
 
             # compute G_Cu_O_dx2y2 and plot
-            compute_Aw_others(H, ep,0, pds,pdp, w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
+            compute_Aw_others(H, A,ep,0, pds,pdp, w_vals, pam.if_compute_Aw_Cu_dx2y2_O, ham.get_Cu_dx2y2_O_indices, \
                               S_val, Sz_val, AorB_sym, "Aw_Cu_dx2y2_O_", flowpeak, fname)
         ############################################################
         # plot total Gdd
@@ -584,6 +583,18 @@ def compute_Aw_main(ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, S
 
             plt.savefig("Aw_dd_"+fname+"_total.pdf")
             
+def get_atomic_d8_energy(A,B,C):
+    E_1S = A+14*B+7*C
+    E_1G = A+4*B+2*C
+    E_1D = A-3*B+2*C
+    E_3P = A+7*B
+    E_3F = A-8*B
+    print "E_1S = ", E_1S      
+    print "E_1G = ", E_1G     
+    print "E_1D = ", E_1D 
+    print "E_3P = ", E_3P
+    print "E_3F = ", E_3F
+    
 ##########################################################################
 if __name__ == '__main__': 
     # set up VS
@@ -604,22 +615,34 @@ if __name__ == '__main__':
     # check if U if unitary
     #checkU_unitary(U,U_d)
     
-    if Norb==3 or Norb==7:
+    if Norb==3:
         for ep in pam.eps:
             for tpd in pam.tpds:
                 for tpp in pam.tpps:
                     for Upp in pam.Upps:
                         print '==================================================='
                         print 'ep=', ep, ' tpd=',tpd,' tpp=',tpp,' Upp=',Upp 
-                        compute_Aw_main(ep,tpd,tpp,0,0,0,0,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
+                        compute_Aw_main(0,ep,tpd,tpp,0,0,0,0,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
+    elif Norb==7:
+        for A in pam.As:
+            get_atomic_d8_energy(A,B,C)
+            for ep in pam.eps:
+                for tpd in pam.tpds:
+                    for tpp in pam.tpps:
+                        for Upp in pam.Upps:
+                            print '==================================================='
+                            print 'A=',A, 'ep=', ep, ' tpd=',tpd,' tpp=',tpp,' Upp=',Upp 
+                            compute_Aw_main(A,ep,tpd,tpp,0,0,0,0,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)
     elif Norb==9:
         pps = pam.pps
         ppp = pam.ppp
-        for ep in pam.eps:
-            for pds in pam.pdss:
-                for pdp in pam.pdps:
-                    for Upp in pam.Upps:
-                        print '==================================================='
-                        print 'ep=',ep,' pds=',pds,' pdp=',pdp,' pps=',pps,' ppp=',ppp,' Upp=',Upp 
-                        compute_Aw_main(ep,0,0,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)                
+        for A in pam.As:
+            get_atomic_d8_energy(A,B,C)
+            for ep in pam.eps:
+                for pds in pam.pdss:
+                    for pdp in pam.pdps:
+                        for Upp in pam.Upps:
+                            print '==================================================='
+                            print 'A=',A, 'ep=',ep,' pds=',pds,' pdp=',pdp,' pps=',pps,' ppp=',ppp,' Upp=',Upp 
+                            compute_Aw_main(A,ep,0,0,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val, Sz_val, AorB_sym)                
     print("--- %s seconds ---" % (time.time() - start_time))
