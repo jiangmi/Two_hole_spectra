@@ -64,7 +64,7 @@ def write_lowpeak2(fname,A,ep,pds,pdp,w_peak):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_lowpeak/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,pds,pdp,w_peak))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,pds,pdp,w_peak))
     
 def getAw(matrix,index,VS,w_vals):  
     # set up Lanczos solver
