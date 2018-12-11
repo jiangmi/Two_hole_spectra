@@ -54,17 +54,17 @@ def write_GS2(fname,A,ep,pds,pdp,Egs):
     f = open('./data_GS/'+fname,'a',1) 
     f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,pds,pdp,Egs))
     
-def write_lowpeak(fname,A,ep,tpd,w_peak,weight):
+def write_lowpeak(fname,A,ep,tpd,w_peak):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_lowpeak/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,tpd,w_peak,weight))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,tpd,w_peak))
     
-def write_lowpeak2(fname,A,ep,pds,pdp,w_peak,weight):
+def write_lowpeak2(fname,A,ep,pds,pdp,w_peak):
     #"a" - Append - will append to the end of the file
     #"w" - Write - will overwrite any existing content
     f = open('./data_lowpeak/'+fname,'a',1) 
-    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,pds,pdp,w_peak,weight))
+    f.write('{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\t{:.6e}\n'.format(A,ep,pds,pdp,w_peak))
     
 def getAw(matrix,index,VS,w_vals):  
     # set up Lanczos solver
@@ -88,15 +88,13 @@ def getAw(matrix,index,VS,w_vals):
         
     if pam.if_find_lowpeak==1:
         if pam.peak_mode=='highest_peak':
-            w_peak, weight = getAw_peak_highest(Aw, w_vals, D, tab)
-            #w_peak = getAw_peak_highest(Aw, w_vals, D, tab)
+            w_peak = getAw_peak_highest(Aw, w_vals, D, tab)
         elif pam.peak_mode=='lowest_peak':
-            w_peak, weight = getAw_peak_lowest(Aw, w_vals, D, tab)
-            #w_peak = getAw_peak_lowest(Aw, w_vals, D, tab)
+            w_peak = getAw_peak_lowest(Aw, w_vals, D, tab)
     else:
-        w_peak = 0.; weight = 0.
+        w_peak = 0.
         
-    return Aw, w_peak, weight
+    return Aw, w_peak
 
 def getAw_peak_highest(Aw, w_vals, D, tab):  
     '''
@@ -107,7 +105,7 @@ def getAw_peak_highest(Aw, w_vals, D, tab):
     w_peak = w_vals[w_idx]
     print 'highest peak at w = ', w_peak
     
-    #'''
+    '''
     # find the area below the whole peak, namely the peak weight
     # ==========================================================
     # 1. first find the peak's w-range: [w_min, w_max]
@@ -145,7 +143,7 @@ def getAw_peak_highest(Aw, w_vals, D, tab):
     weight = tab[idx]
     assert(weight>=0.0 and weight<=1.0)
     '''
-    return w_peak, weight
+    return w_peak #, weight
 
 def getAw_peak_lowest(Aw, w_vals, D, tab):  
     '''
@@ -163,7 +161,7 @@ def getAw_peak_lowest(Aw, w_vals, D, tab):
     w_peak = w_vals[w_idx]
     print 'lowest peak at w = ', w_peak
     
-    #'''
+    '''
     # find the area below the whole peak, namely the peak weight
     # ==========================================================
     # 1. first find the peak's w-range: [w_min, w_max]
@@ -190,7 +188,7 @@ def getAw_peak_lowest(Aw, w_vals, D, tab):
     print 'lowest peak, weight = ', w_peak, '  ', weight
     #'''
 
-    return w_peak, weight
+    return w_peak #, weight
 
 def get_ground_state(matrix,S_val,Sz_val):  
     '''
@@ -277,7 +275,7 @@ def compute_Aw_others(H,A,ep,tpd,pds,pdp,w_vals, pam_flag,ham_func,S_val,Sz_val,
         Nstate = len(state_indices)
         for j in range(0,Nstate):
             index = state_indices[j]
-            Aw, w_peak, weight = getAw(H,index,VS,w_vals)           
+            Aw, w_peak = getAw(H,index,VS,w_vals)           
 
             state = VS.get_state(VS.lookup_tbl[index])
             o1 = state['hole1_orb']
@@ -288,9 +286,9 @@ def compute_Aw_others(H,A,ep,tpd,pds,pdp,w_vals, pam_flag,ham_func,S_val,Sz_val,
             # write lowest peak data into file
             if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
                 if Norb==3 or Norb==7:
-                    write_lowpeak(fig_name+flowpeak+'.txt',A,ep,tpd,w_peak, weight)
+                    write_lowpeak(fig_name+flowpeak+'.txt',A,ep,tpd,w_peak)
                 elif Norb==9:
-                    write_lowpeak2(fig_name+flowpeak+'.txt',A,ep,pds,pdp,w_peak, weight)
+                    write_lowpeak2(fig_name+flowpeak+'.txt',A,ep,pds,pdp,w_peak)
 
             # write data into file for reusage
             if pam.if_write_Aw==1:
@@ -400,11 +398,11 @@ def compute_Aw_main(A,ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val,
         Nstate = len(dd_state_indices)
         for j in range(0,Nstate):
             index = dd_state_indices[j]
-            Aw, w_peak, weight = getAw(H,index,VS,w_vals)   
+            Aw, w_peak = getAw(H,index,VS,w_vals)   
             
             # write lowest peak data into file
             if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
-                write_lowpeak(flowpeak+'.txt',0,ep,tpd,w_peak, weight)
+                write_lowpeak(flowpeak+'.txt',0,ep,tpd,w_peak)
                 
             # write Aw data into file for reusage
             if pam.if_write_Aw==1:
@@ -494,16 +492,16 @@ def compute_Aw_main(A,ep,tpd,tpp,pds,pdp,pps,ppp,Upp,d_double,p_double,U, S_val,
             
             Aw_dd = np.zeros(len(w_vals))
             for index in dd_state_indices:      
-                Aw, w_peak, weight = getAw(H,index,VS,w_vals)
+                Aw, w_peak = getAw(H,index,VS,w_vals)
                 Aw_dd += Aw  #*coef_frac_parentage[spinorb]
                 #Aw_dGS += wgh_d*Aw
                 
                 # write lowest peak data into file
                 if pam.if_find_lowpeak==1 and pam.if_write_lowpeak_ep_tpd==1:
                     if Norb==7:
-                        write_lowpeak(flowpeak+'_'+sym+'.txt',A,ep,tpd,w_peak, weight)
+                        write_lowpeak(flowpeak+'_'+sym+'.txt',A,ep,tpd,w_peak)
                     elif Norb==9:
-                        write_lowpeak2(flowpeak+'_'+sym+'.txt',A,ep,pds,pdp,w_peak, weight)
+                        write_lowpeak2(flowpeak+'_'+sym+'.txt',A,ep,pds,pdp,w_peak)
                           
             # write data into file for reusage
             if pam.if_write_Aw==1:
